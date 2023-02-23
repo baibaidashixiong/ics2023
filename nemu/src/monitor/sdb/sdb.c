@@ -33,7 +33,7 @@ static char* rl_gets() {
     line_read = NULL;
   }
 
-  line_read = readline("(nemu) ");
+  line_read = readline("(zqz-nemu): ");
 
   if (line_read && *line_read) {
     add_history(line_read);
@@ -47,6 +47,20 @@ static int cmd_c(char *args) {
   return 0;
 }
 
+static int cmd_si(char *args) {
+  char *arg = strtok(NULL, " ");
+  if (arg == NULL) cpu_exec(1);
+  else if ((arg[0]-48) > 0)// '0'的ascii是48
+    cpu_exec(arg[0]-48);
+  else 
+    return 1;
+  return 0;
+}
+
+static int cmd_info(char *args) {
+  isa_reg_display();
+  return 0;
+}
 
 static int cmd_q(char *args) {
   return -1;
@@ -61,6 +75,8 @@ static struct {
 } cmd_table [] = {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
+  { "si", "Execute N instructions, default N is 1", cmd_si },
+  { "info", "Print register status and monitor information", cmd_info },
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */
