@@ -18,6 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <memory/vaddr.h>
 
 static int is_batch_mode = false;
 
@@ -64,6 +65,22 @@ static int cmd_info(char *args) {
   return 0;
 }
 
+static int cmd_x(char *args) {
+  int len = atoi(strtok(NULL, " "));
+  char *addr = strtok(NULL, " ");
+  uint32_t addr_t;
+  sscanf(addr, "%x",&addr_t);
+  uint32_t content ;
+  for( int i =0; i < len; i++ ){
+    content = vaddr_read( addr_t, 1 );
+    printf("\033[0;34m0x%x:\033[0;30m 0x%08x | ", addr_t,content);
+    addr_t += 4;
+    if( (i+1)%4 == 0) printf("\n");
+  }
+  printf("\n");
+  return 0;
+}
+
 static int cmd_q(char *args) {
   return -1;
 }
@@ -79,6 +96,7 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "si", "Execute N instructions, default N is 1", cmd_si },
   { "info", "Print register status and monitor information", cmd_info },
+  { "x", "x N EXPR, Find the value of the expression EXPR and use the result as the starting memory address, output N consecutive 4 bytes in hexadecimal format", cmd_x },
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */
@@ -95,7 +113,7 @@ static int cmd_help(char *args) {
   if (arg == NULL) {
     /* no argument given */
     for (i = 0; i < NR_CMD; i ++) {
-      printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
+      printf("%-4s - %s\n", cmd_table[i].name, cmd_table[i].description);
     }
   }
   else {
