@@ -72,11 +72,18 @@ static int cmd_x(char *args) {
   uint32_t content ;
   for( int i =0; i < len; i++ ){
     content = vaddr_read( addr_t, 1 );
-    printf("\033[0;34m0x%x:\033[0;30m 0x%08x | ", addr_t,content);
+    printf("\033[0;34m0x%x:\033[0m 0x%08x | ", addr_t,content);
     addr_t += 4;
     if( (i+1)%4 == 0) printf("\n");
   }
   printf("\n");
+  return 0;
+}
+
+static int cmd_p(char *args) {
+  char *arg = strtok(NULL, " ");
+  bool *success = false;
+  expr(arg, success);
   return 0;
 }
 
@@ -96,6 +103,7 @@ static struct {
   { "si", "Execute N instructions, default N is 1", cmd_si },
   { "info", "Print register status and monitor information", cmd_info },
   { "x", "x N EXPR, Find the value of the expression EXPR and use the result as the starting memory address, output N consecutive 4 bytes in hexadecimal format", cmd_x },
+  { "p", "p the value of expr", cmd_p },
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */

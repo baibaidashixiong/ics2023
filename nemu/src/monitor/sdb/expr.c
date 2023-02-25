@@ -21,7 +21,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ,
+  TK_NOTYPE = 256, TK_HEX, TK_DEX, TK_EQ,
 
   /* TODO: Add more token types */
 
@@ -37,8 +37,16 @@ static struct rule {
    */
 
   {" +", TK_NOTYPE},    // spaces
-  {"\\+", '+'},         // plus
+  {"0[xX][0-9a-fA-F]+", TK_HEX}, //hex
+  {"[0-9]+", TK_DEX},   // de
   {"==", TK_EQ},        // equal
+  {"\\+", '+'},         // plus, ascii = 43
+  {"\\-", '-'},         // sub, ascii = 45
+  {"\\*", '*'},         // mul, ascii = 42
+  {"\\/", '/'},         // div, ascii = 47
+  {"\\(", '('},         // left bracket, ascii = 40
+  {"\\)", ')'},         // right bracket,ascii = 41
+  
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -54,7 +62,7 @@ void init_regex() {
   int ret;
 
   for (i = 0; i < NR_REGEX; i ++) {
-    ret = regcomp(&re[i], rules[i].regex, REG_EXTENDED);
+    ret = regcomp(&re[i], rules[i].regex, REG_EXTENDED); // 编译正则表达式
     if (ret != 0) {
       regerror(ret, &re[i], error_msg, 128);
       panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
@@ -81,7 +89,7 @@ static bool make_token(char *e) {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 && pmatch.rm_so == 0) {
-        char *substr_start = e + position;
+        char *substr_start = e + position; // mached token value
         int substr_len = pmatch.rm_eo;
 
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
@@ -93,8 +101,15 @@ static bool make_token(char *e) {
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
-
+        if(rules[i].token_type > 255) // 非运算符的token还需记录值的大小
+          strcpy(tokens[nr_token].str, substr_start);
+        tokens[nr_token++].type = rules[i].token_type;
         switch (rules[i].token_type) {
+          case 256: break;
+          case 257: break;
+          case 258: break;
+          case 259: break;
+          case '+': case '-': case '*': case '/': case '(': case ')': break;
           default: TODO();
         }
 
