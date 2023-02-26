@@ -184,7 +184,8 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
         switch (rules[i].token_type){
-          case 256: case 257: case 258: case 259:
+          case TK_NOTYPE: break;
+          case 257: case 258: case 259:
             strcpy(tokens[nr_token].str, substr_start);
             tokens[nr_token].priority = rules[i].priority;
             tokens[nr_token++].type = rules[i].token_type;
