@@ -21,7 +21,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_HEX, TK_DEX, TK_EQ,
+  TK_NOTYPE = 256, TK_HEX, TK_DEX, TK_REG, TK_EQ,
 
   /* TODO: Add more token types */
 
@@ -39,6 +39,7 @@ static struct rule {
   {" +", TK_NOTYPE, 9},    // spaces
   {"0[xX][0-9a-fA-F]+", TK_HEX, 9}, //hex
   {"[0-9]+", TK_DEX, 9},   // dex
+  {"\\$[a-z0-9]+", TK_REG, 9},       // reg
   {"==", TK_EQ, 7},        // equal
   {"\\+", '+', 4},         // plus, ascii = 43
   {"\\-", '-', 4},         // sub, ascii = 45
@@ -183,18 +184,23 @@ static bool make_token(char *e) {
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
+        if(rules[i].token_type == TK_NOTYPE) break;
         switch (rules[i].token_type){
-          case TK_NOTYPE: break;
-          case 257: case 258: case 259:
+          case TK_REG:
+
+          break;
+          case TK_HEX:
+            uint32_t a = (uint32_t)strtol(substr_start, NULL, 16);
+            sprintf(tokens[nr_token].str, "%d", a);
+          break;
+          case TK_DEX: case TK_EQ:
             strcpy(tokens[nr_token].str, substr_start);
-            tokens[nr_token].priority = rules[i].priority;
-            tokens[nr_token++].type = rules[i].token_type;
           break;
           default:
-            tokens[nr_token].priority = rules[i].priority;
-            tokens[nr_token++].type = rules[i].token_type;
           break;
         }
+        tokens[nr_token].priority = rules[i].priority;
+        tokens[nr_token++].type = rules[i].token_type;
         break;
       }
     }
