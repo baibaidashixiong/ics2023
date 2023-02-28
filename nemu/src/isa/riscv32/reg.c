@@ -32,6 +32,9 @@ void isa_reg_display(char *arg) {
     printf("pc : 0x%08x\n",cpu.pc);
   }
   else {
+    if (strcmp(arg, "pc") == 0) {
+      printf("pc : 0x%08x\n",cpu.pc);
+    }
     for (int i = 0; i < 32; i ++) {
       if (strcmp(arg, regs[i]) == 0) {
         printf("%-3s: 0x%08x\n",regs[i],gpr(i));
@@ -42,5 +45,13 @@ void isa_reg_display(char *arg) {
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
-  return 0;
+  for (int i = 0; i < 32; i ++) {
+    if (strcmp(s, regs[i]) == 0) {
+      return gpr(i);
+    }
+  }
+  if (strcmp(s, "pc") == 0) {
+    return cpu.pc;
+  }
+  return 1;
 }

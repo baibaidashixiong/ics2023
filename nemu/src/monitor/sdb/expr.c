@@ -19,9 +19,10 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
+#include <memory/paddr.h>
 
 enum {
-  TK_NOTYPE = 256, TK_HEX, TK_DEX, TK_REG, TK_EQ,
+  TK_NOTYPE = 256, TK_HEX, TK_DEX, TK_REG, TK_EQ, TK_DEREF, TK_NEG
 
   /* TODO: Add more token types */
 
@@ -86,7 +87,7 @@ static int nr_token __attribute__((used))  = 0;
 static int determine_operator(int start, int end){
   int position = start, pri_min = 1, bra_count = 0;
   for(int i = start; i < end; i++){
-    if(tokens[i].type == TK_NOTYPE || tokens[i].type ==TK_HEX || tokens[i].type == TK_DEX || tokens[i].type == TK_EQ)
+    if(tokens[i].type ==TK_HEX || tokens[i].type == TK_DEX || tokens[i].type == TK_EQ || tokens[i].type == TK_NEG)
       continue;
 		bool flag = true;
 		for (int j = i; j >= start; j--) { 
@@ -102,7 +103,8 @@ static int determine_operator(int start, int end){
 		}
 		if (!flag)
       continue;
-    if(tokens[i].priority > pri_min){
+    if(tokens[i].priority >= pri_min){ 
+    /* 加等于号是因为同等优先级下最后被结合的才是主运算符 */
       position = i;
       pri_min = tokens[i].priority;
     }
@@ -121,7 +123,7 @@ static bool check_parentheses(int start, int end){
     if(tokens[i].type == '('){
       bra_num++;
     }
-    if(i == end && bra_num != 1)
+    if((i == end && bra_num != 1) || (i != end && bra_num == 0))
       return false;
     else if(tokens[i].type == ')'){
       bra_num--;
@@ -136,7 +138,11 @@ static bool check_parentheses(int start, int end){
 static int eval(int start, int end) {
   if(start > end) assert(start < end);
   else if(start == end){
-    return atoi(tokens[start].str);
+    if(tokens[start].type != TK_DEX && tokens[start].type != TK_HEX){/* 判断单个字符是否合法 */
+      //*success = false;
+      return 0;
+    }
+    else  return atoi(tokens[start].str);
   }
   else if(check_parentheses(start, end) == true){ // 
     /* The expression is surrounded by a matched pair of parentheses.
@@ -147,13 +153,21 @@ static int eval(int start, int end) {
   }
   else {
     int op_position = determine_operator(start, end);
-    int val1 = eval(start , op_position - 1);
-    int val2 = eval(op_position + 1, end);
+    int val1 = 0, val2 = 0;
+    if (op_position != start){
+      val1 = eval(start , op_position - 1);
+      val2 = eval(op_position + 1, end);
+    }
+    else if (tokens[op_position].type == TK_NEG || tokens[op_position].type == TK_DEREF){
+      val2 = eval(op_position + 1, end);
+    }
     switch (tokens[op_position].type) {
       case '+': return val1 + val2;
       case '-': return val1 - val2;
       case '*': return val1 * val2;
       case '/': return val1 / val2;
+      case TK_NEG : return 0 - val2;
+      case TK_DEREF : return paddr_read(val2, 1);
       default: assert(0);
     }
   }
@@ -186,17 +200,22 @@ static bool make_token(char *e) {
          */
         if(rules[i].token_type == TK_NOTYPE) break;
         switch (rules[i].token_type){
-          case TK_REG:
-
-          break;
+          
           case TK_HEX:
-            uint32_t a = (uint32_t)strtol(substr_start, NULL, 16);
-            sprintf(tokens[nr_token].str, "%d", a);
+            uint32_t hex_val = (uint32_t)strtol(substr_start, NULL, 16);
+            sprintf(tokens[nr_token].str, "%d", hex_val);
           break;
           case TK_DEX: case TK_EQ:
             strcpy(tokens[nr_token].str, substr_start);
           break;
+          case TK_REG:
+            char *s =  substr_start + 1;
+            bool *flag = false;
+            uint32_t reg_val = isa_reg_str2val(s, flag);
+            sprintf(tokens[nr_token].str, "%d", reg_val);
+          break;
           default:
+            strcpy(tokens[nr_token].str, substr_start);
           break;
         }
         tokens[nr_token].priority = rules[i].priority;
@@ -211,8 +230,6 @@ static bool make_token(char *e) {
       return false;
     }
   }
-  int value = eval(0, nr_token-1);
-  printf("the expr value is %d\n", value);
 
   return true;
 }
@@ -225,7 +242,22 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  //TODO();
+  for (int i = 0; i < nr_token; i ++) {
+    if (tokens[i].type == '*' && (i == 0 || 
+      (tokens[i - 1].type != TK_HEX && tokens[i - 1].type != TK_DEX 
+        && tokens[i - 1].type != TK_REG && tokens[i - 1].type != ')') )) {
+      tokens[i].type = TK_DEREF;
+      tokens[i].priority = 7;
+    }
+    if (tokens[i].type == '-' && (i == 0 || 
+      (tokens[i - 1].type != TK_HEX && tokens[i - 1].type != TK_DEX 
+        && tokens[i - 1].type != TK_REG && tokens[i - 1].type != ')') )) {
+      tokens[i].type = TK_NEG;
+      tokens[i].priority = 7;
+    }
+  }
+  int value = eval(0, nr_token-1);
+  printf("the expr value is %d\n", value);
 
   return 0;
 }

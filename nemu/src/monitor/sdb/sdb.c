@@ -18,7 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
-#include <memory/vaddr.h>
+#include <memory/paddr.h>
 
 static int is_batch_mode = false;
 
@@ -69,12 +69,17 @@ static int cmd_x(char *args) {
   char *addr = strtok(NULL, " ");
   uint32_t addr_t;
   sscanf(addr, "%x",&addr_t);
-  uint32_t content ;
+  //uint32_t content ;
+  printf("\t     high addr  <--  low addr\n");
+  printf("\t     ------------------------\n");
   for( int i =0; i < len; i++ ){
-    content = vaddr_read( addr_t, 1 );
-    printf("\033[0;34m0x%x:\033[0m 0x%08x | ", addr_t,content);
+    printf("\033[0;34m0x%x: ", addr_t);
+    printf("\033[0m 0x%08x | ", paddr_read(addr_t, 4));
+    for(int k = 3; k >= 0; k--){ /* 打印十进制 */
+      printf("\033[0m %03d ", paddr_read(addr_t + (k * 1), 1));
+    }
+    printf("\n");
     addr_t += 4;
-    if( (i+1)%4 == 0) printf("\n");
   }
   printf("\n");
   return 0;
@@ -99,10 +104,10 @@ static struct {
 } cmd_table [] = {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
-  { "si", "Execute N instructions, default N is 1", cmd_si },
-  { "info", "Print register status and monitor information", cmd_info },
-  { "x", "x N EXPR, Find the value of the expression EXPR and use the result as the starting memory address, output N consecutive 4 bytes in hexadecimal format", cmd_x },
-  { "p", "p the value of expr", cmd_p },
+  { "si", "Execute N instructions, default N is 1. usage: si N", cmd_si },
+  { "info", "Print register status and monitor information. usage: info reg_name", cmd_info },
+  { "x", "x N EXPR. Find the value of the expression EXPR and use the result as the starting memory address, output N consecutive 4 bytes in hexadecimal format", cmd_x },
+  { "p", "p the value of expr. usage: p <expr>", cmd_p },
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */
