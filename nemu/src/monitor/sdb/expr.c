@@ -24,8 +24,6 @@
 enum {
   TK_NOTYPE = 256, TK_HEX, TK_DEX, TK_REG, TK_EQ, TK_DEREF, TK_NEG
 
-  /* TODO: Add more token types */
-
 };
 
 static struct rule {
@@ -138,7 +136,7 @@ static bool check_parentheses(int start, int end){
 static int eval(int start, int end) {
   if(start > end) assert(start < end);
   else if(start == end){
-    if(tokens[start].type != TK_DEX && tokens[start].type != TK_HEX){/* 判断单个字符是否合法 */
+    if(tokens[start].type != TK_DEX && tokens[start].type != TK_HEX && tokens[start].type != TK_REG){/* 判断单个字符是否合法 */
       //*success = false;
       return 0;
     }
@@ -168,7 +166,9 @@ static int eval(int start, int end) {
       case '/': return val1 / val2;
       case TK_NEG : return 0 - val2;
       case TK_DEREF : return paddr_read(val2, 1);
-      default: assert(0);
+      default: {
+        printf("no match!");
+        assert(0);}
     }
   }
   return 0;
@@ -257,7 +257,7 @@ word_t expr(char *e, bool *success) {
     }
   }
   int value = eval(0, nr_token-1);
-  printf("the expr value is %d\n", value);
+  printf("the hex of expr value is 0x%08x, dex is %d\n", value, value);
 
-  return 0;
+  return value;
 }
