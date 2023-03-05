@@ -257,7 +257,7 @@ word_t expr(char *e, bool *success) {
     }
   }
   int value = eval(0, nr_token-1);
-  printf("the hex of expr value is 0x%08x, dex is %d\n", value, value);
+  //printf("the hex of expr value is 0x%08x, dex is %d\n", value, value);
 
   return value;
 }

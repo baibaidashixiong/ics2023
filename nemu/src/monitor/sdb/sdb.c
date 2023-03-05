@@ -91,6 +91,29 @@ static int cmd_p(char *args) {
   return 0;
 }
 
+static int cmd_w(char *args) {
+  char *arg = strtok(NULL, " "); 
+  new_wp(arg);
+  return 0;
+}
+
+static int cmd_d(char *args) {
+  int NO = 0 ;
+  if(!args) {
+    printf("please input the number of watchpoint!\n");
+    wp_dis();
+    return 0;
+  }
+  NO = (int)strtol(args, NULL, 10);
+  free_wp(NO);
+  return 0;
+}
+
+static int cmd_wd(char *args) {
+  wp_dis();
+  return 0;
+}
+
 static int cmd_q(char *args) {
   return -1;
 }
@@ -106,8 +129,12 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "si", "Execute N instructions, default N is 1. usage: si N", cmd_si },
   { "info", "Print register status and monitor information. usage: info reg_name", cmd_info },
-  { "x", "x N EXPR. Find the value of the expression EXPR and use the result as the starting memory address, output N consecutive 4 bytes in hexadecimal format", cmd_x },
-  { "p", "p the value of expr. usage: p <expr>", cmd_p },
+  { "x", "x N EXPR(addr). Find the value of the expression EXPR and use the result as the starting memory address, output N consecutive 4 bytes in hexadecimal format", cmd_x },
+  { "p", "p the value of expr. usage: p <expr>($reg_name or *addr)", cmd_p },
+  { "w", "pause program execution when the value of the expression EXPR changes.\n \
+         usage: w $reg_name or w *addr", cmd_w },
+  { "d", "delete the number of the watchpoint", cmd_d },
+  { "wd", "display watchpoint", cmd_wd },
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */

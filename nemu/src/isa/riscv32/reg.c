@@ -34,6 +34,7 @@ void isa_reg_display(char *arg) {
   else {
     if (strcmp(arg, "pc") == 0) {
       printf("pc : 0x%08x\n",cpu.pc);
+      return;
     }
     for (int i = 0; i < 32; i ++) {
       if (strcmp(arg, regs[i]) == 0) {

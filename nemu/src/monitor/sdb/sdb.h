@@ -19,5 +19,21 @@
 #include <common.h>
 
 word_t expr(char *e, bool *success);
+typedef struct watchpoint {
+  int NO;
+  char addr[32];
+  /*
+   *   here must be the char array char [], but not the string char *,
+   *   because when use the char *, the address of args will be stored in char *,
+   *   next time input command [wd], args turn to null, so the output of wp->addr 
+   *   will be null. 
+   */
+  int value;
+  struct watchpoint *next;
+} WP;
+WP* new_wp(char *args);
+void free_wp(int NO);
+void wp_dis();
+void wp_check();
 
 #endif
