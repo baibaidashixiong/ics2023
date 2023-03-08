@@ -24,6 +24,23 @@ static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
+/* print binary numbers */
+void printf_bin(int num)
+{
+	int i, j, k;
+	char *p = (char*)&num + 3;/* p指向num的最高字节地址 */
+	for (i = 0; i < 4; i++){
+		j = *(p - i); //取每个字节的首地址，从高位字节到低位字节，即p p-1 p-2 p-3地址处
+		for (k = 7; k >= 0; k--){
+			if (j & (1 << k))
+				printf("1");
+			else
+				printf("0");
+		}
+		printf(" ");
+	}
+	printf("\r\n");
+}
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -67,18 +84,20 @@ static int cmd_info(char *args) {
 static int cmd_x(char *args) {
   int len = atoi(strtok(NULL, " "));
   char *addr = strtok(NULL, " ");
-  uint32_t addr_t;
+  uint32_t addr_t, addr_p;
   sscanf(addr, "%x",&addr_t);
   //uint32_t content ;
   printf("\t     high addr  <--  low addr\n");
   printf("\t     ------------------------\n");
   for( int i =0; i < len; i++ ){
+    addr_p = paddr_read(addr_t, 4);
     printf("\033[0;34m0x%x: ", addr_t);
-    printf("\033[0m 0x%08x | ", paddr_read(addr_t, 4));
-    for(int k = 3; k >= 0; k--){ /* 打印十进制 */
-      printf("\033[0m %03d ", paddr_read(addr_t + (k * 1), 1));
-    }
-    printf("\n");
+    printf("\033[0m 0x%08x | ", addr_p);
+    printf_bin(addr_p);
+    // for(int k = 3; k >= 0; k--){ /* 打印十进制 */
+    //   printf("\033[0m %03d ", paddr_read(addr_t + (k * 1), 1));
+    // }
+    //printf("\n");
     addr_t += 4;
   }
   printf("\n");
