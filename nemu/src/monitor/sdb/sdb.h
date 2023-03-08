@@ -35,5 +35,7 @@ WP* new_wp(char *args);
 void free_wp(int NO);
 void wp_dis();
 void wp_check();
+void printf_bin();
+
 
 #endif
