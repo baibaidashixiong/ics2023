@@ -84,8 +84,12 @@
 #define MAP(c, f) c(f)
 
 #define BITMASK(bits) ((1ull << (bits)) - 1)
-#define BITS(x, hi, lo) (((x) >> (lo)) & BITMASK((hi) - (lo) + 1)) // similar to x[hi:lo] in verilog
+#define BITS(x, hi, lo) (((x) >> (lo)) & BITMASK((hi) - (lo) + 1)) // similar to x[hi:lo] in verilog, 抽取出lo到hi的数
 #define SEXT(x, len) ({ struct { int64_t n : len; } __x = { .n = x }; (uint64_t)__x.n; })
+/*
+ * int n:len is called bitfields, it will automatically adapt length to bit width
+ * not understand clearly, 
+ */
 
 #define ROUNDUP(a, sz)   ((((uintptr_t)a) + (sz) - 1) & ~((sz) - 1))
 #define ROUNDDOWN(a, sz) ((((uintptr_t)a)) & ~((sz) - 1))
