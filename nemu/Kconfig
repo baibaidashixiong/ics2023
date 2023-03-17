@@ -141,6 +141,10 @@ config ITRACE
   bool "Enable instruction tracer"
   default y
 
+config WATCHPOINT
+  bool "Enable nemu watchpoint"
+  default y
+
 config ITRACE_COND
   depends on ITRACE
   string "Only trace instructions when the condition is true"

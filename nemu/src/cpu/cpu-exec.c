@@ -26,6 +26,19 @@
  */
 #define MAX_INST_TO_PRINT 30
 
+/*
+ * datastruct for itrace
+ */
+#ifdef CONFIG_ITRACE_COND
+#define MAX_IRINGBUF 8
+typedef struct {
+  char logbuf[64];
+} ItraceNode;
+
+ItraceNode iringbuf[MAX_IRINGBUF];
+uint32_t inode = 0;
+#endif
+
 CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
@@ -35,10 +48,16 @@ void device_update();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
-  if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
+  if (ITRACE_COND) { 
+    log_write("%s\n", _this->logbuf);
+    int idx = inode++ % MAX_IRINGBUF;
+    strcpy(iringbuf[idx].logbuf, _this->logbuf);
+  }
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
+#ifdef CONFIG_WATCHPOINT
   wp_check();
+#endif
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 }
 
@@ -114,7 +133,15 @@ void cpu_exec(uint64_t n) {
   switch (nemu_state.state) {
     case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
 
-    case NEMU_END: case NEMU_ABORT:
+    case NEMU_ABORT:
+      puts("FAILED! instruction trace:");
+      for(int i = 0; i< MAX_IRINGBUF; i++){
+        if(unlikely(i == ((inode % MAX_IRINGBUF == 0) ? MAX_IRINGBUF - 1 : inode % MAX_IRINGBUF - 1)))
+          printf("\33[1;31m --> %s\n\33[0m", iringbuf[i].logbuf);
+        else
+          printf("     %s\n", iringbuf[i].logbuf);
+      }
+    case NEMU_END: 
       Log("nemu: %s at pc = " FMT_WORD,
           (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
            (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
