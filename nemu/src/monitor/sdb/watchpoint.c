@@ -41,7 +41,6 @@ void init_wp_pool() {
   busy_head->next = NULL;
 }
 
-/* TODO: Implement the functionality of watchpoint */
 
 WP* new_wp(char *args){
   WP *tmp = free_head->next;
