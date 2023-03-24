@@ -110,8 +110,10 @@ void init_monitor(int argc, char *argv[]) {
   /* Set random seed. */
   init_rand();
 
+  #ifdef CONFIG_FTRACE
   /* Parse elf file. */
   parse_elf(elf_file);
+  #endif
 
   /* Open the log file. */
   init_log(log_file);

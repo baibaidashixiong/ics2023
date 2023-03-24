@@ -17,6 +17,7 @@
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
+#include <common.h>
 #include "../monitor/sdb/sdb.h" /* anyway better? */
 
 /* The assembly code of instructions executed is only output to the screen
@@ -60,6 +61,54 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 }
+
+#ifdef CONFIG_FTRACE
+/* frace:function trace */
+int ftrace_dep = 0;
+char a[2] = "  ";
+extern FTRACE_FUNC ftrace_func[FUNC_NUM1];
+char name[10] = "";
+void ftrace_print(uint32_t inst_pc, uint32_t inst_des, uint32_t inst_val){
+  /*
+   *  jr  <-> jalr x0, 0(rs1)
+   *  0x00078067 | 00000000 00000111 10000000 01100111
+   *  t =pc+4; pc=(x[15](a5)+offset(0))&∼1; x[0]=t
+   *  here return address aborted due to `tail-recursive`
+   */
+  if(inst_val == 0x78067) return;
+  char s[50] = "";
+  /*
+   *  0x00008067 | 00000000 00000000 10000000 01100111
+   *  t =pc+4; pc=(x[1]+offset(0))&∼1; x[0]=t
+   *  &~1(1111 1110 in binary) 
+   *  will effectively sets the least significant bit of the result to 0. 
+   *    for word-aligned addresses.
+   *  the least significant bit of a memory address in RISC-V architecture 
+   *    is always 0 for word-aligned addresses. 
+   *  x[1] will store the return address.
+   */
+  if(inst_val == 0x00008067) ftrace_dep--;
+  for(int i = 0; i < FUNC_NUM1; i++){
+    if(((ftrace_func[i].type & 0xf) == 2) && (inst_des == ftrace_func[i].addr)){
+      strcpy(name, ftrace_func[i].func_name);
+      break;
+    }
+  }
+
+  for(int i = 0; i < ftrace_dep; i++){
+      strcat(s, a);
+  }
+  if(inst_val != 0x00008067){
+    ftrace_dep++;
+    printf("0x%x: %scall [%s@%x]\n", inst_pc, s, name, inst_des);
+  }
+  else
+    printf("0x%x: %sret [\33[1;31mTODO:FUNC_NAME\33[0m]\n",inst_pc, s);
+  /*
+   *  TODO : realize tail-recursive function name print
+   */
+}
+#endif
 
 static void exec_once(Decode *s, vaddr_t pc) {
   s->pc = pc;
