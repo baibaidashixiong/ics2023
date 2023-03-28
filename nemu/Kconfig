@@ -150,7 +150,7 @@ config MTRACE
   default n
 
 config FTRACE
-  bool "Enable function trace"
+  bool "Enable function trace(Only for target elf file is assigned in cmdline)"
   default n
 
 config ITRACE_COND

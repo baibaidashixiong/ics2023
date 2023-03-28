@@ -183,6 +183,7 @@ void cpu_exec(uint64_t n) {
     case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
 
     case NEMU_ABORT:
+      #ifdef CONFIG_ITRACE_COND
       puts("FAILED! instruction trace:");
       for(int i = 0; i< MAX_IRINGBUF; i++){
         if(unlikely(i == ((inode % MAX_IRINGBUF == 0) ? MAX_IRINGBUF - 1 : inode % MAX_IRINGBUF - 1)))
@@ -190,6 +191,7 @@ void cpu_exec(uint64_t n) {
         else
           printf("     %s\n", iringbuf[i].logbuf);
       }
+      #endif
     case NEMU_END: 
       Log("nemu: %s at pc = " FMT_WORD,
           (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
