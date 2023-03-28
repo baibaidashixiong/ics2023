@@ -6,7 +6,17 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 int printf(const char *fmt, ...) {
-  panic("Not implemented");
+  char buffer[128];
+  va_list ap;
+  int ret;
+
+  va_start(ap, fmt);
+  ret = vsprintf(buffer, fmt, ap);
+  va_end(ap);
+
+  putstr(buffer);
+
+  return ret;
 }
 
 int vsprintf(char *out, const char *fmt, va_list ap) {
@@ -19,20 +29,22 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
   char buffer[32];
   char *txt, cha;
   int num, len;
-  int i, j;
+  int i, j, len_format_flag = 0;
   for (i = 0, j = 0; fmt[i] != '\0'; ++i){
-    if (fmt[i] != '%'){
+    if (fmt[i] != '%' && len_format_flag == 0){
       out[j++]=fmt[i];
       continue;
     }
     switch (fmt[++i]){
       case 's':
+        len_format_flag = 0;
         txt = va_arg(ap, char*);
         for (int k = 0; txt[k] !='\0'; ++k)
           out[j++] = txt[k];
         break;
       
       case 'd':
+        len_format_flag = 0;
         num = va_arg(ap, int);
         if(num == 0){
           out[j++] = '0';
@@ -44,9 +56,14 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
           out[j++] = buffer[k];
         break;
       
+      case '0' ... '9':  /* for format like %02d */
+        len_format_flag = 1;
+        break;
+
       case 'c':
         cha = (char)va_arg(ap, int);
         out[j++] = cha;
+        len_format_flag = 0;
         break;
 
       default:
