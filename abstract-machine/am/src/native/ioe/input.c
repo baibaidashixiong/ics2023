@@ -48,7 +48,7 @@ void __am_input_config(AM_INPUT_CONFIG_T *cfg) {
   cfg->present = true;
 }
 
-void __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd) {
+void __am_input_keybrd(AM_INPUT_KEYBRD_T *kbd) {/* KBD_ADDR in nemu.h store the address of keyboard */
   int k = AM_KEY_NONE;
 
   SDL_LockMutex(key_queue_lock);
