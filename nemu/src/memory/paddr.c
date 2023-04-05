@@ -24,6 +24,71 @@ static uint8_t *pmem = NULL;
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 #endif
 
+#ifdef CONFIG_MTRACE
+/*
+ *  datastrcut for mtrace
+ */
+typedef struct mtrace {
+  char trace_info[48];
+  struct mtrace *next;
+} MT;
+static MT *mt_head, *mt_end;
+static int n_mt = 0;/* current number of mt */
+#define N_MT 19
+
+static void init_mt() {
+  mt_head = (MT*)malloc(sizeof(MT));
+  mt_end = (MT*)malloc(sizeof(MT));
+}
+
+static void mt_infowrite(char *s){
+  MT *mt;
+  mt = (MT*)malloc(sizeof(MT));
+  strcpy(mt->trace_info, s);
+  mt->next = NULL;
+  if(n_mt == N_MT){
+    mt_end->next = mt;
+    mt_end = mt_end->next;
+    mt_head = mt_head->next;
+  }
+  else {
+    mt_end->next = mt;
+    mt_end = mt;
+    if(n_mt == 0)
+      mt_head->next = mt_end;
+    n_mt++;
+  }
+  /* 
+   *  for this program(what about other pros?), 
+   *   if use free(mt), every time 
+   *  the address malloc for mt will be the same, 
+   *  so mt_head->next will always be the same
+   *  but this will lead to memory leak due to non release,
+   *  Is there a better way than using a mem trace pool like watchpoint?
+   */
+}
+
+static void mt_pread(paddr_t addr, int len) {
+  char s[48];
+  sprintf(s, "pread at " FMT_PADDR " len=%d", addr, len);
+  mt_infowrite(s);
+}
+
+static void mt_pwrite(paddr_t addr, int len, word_t data) {
+  char s[48];
+  sprintf(s, "pwrite at " FMT_PADDR " len=%d, data=" FMT_WORD "", addr, len, data);
+  mt_infowrite(s);
+}
+
+static void mt_infoput() {
+  MT *mt = mt_head;
+  while(mt){
+    puts(mt->trace_info);
+    mt = mt->next;
+  }
+}
+#endif
+
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 
@@ -37,6 +102,10 @@ static void pmem_write(paddr_t addr, int len, word_t data) {
 }
 
 static void out_of_bound(paddr_t addr) {
+#ifdef CONFIG_MTRACE
+  printf("\33[1;31mThe latest %d memory trace is:\33[0m", N_MT + 1);
+  mt_infoput();
+#endif
   panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
       addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
 }
@@ -53,10 +122,16 @@ void init_mem() {
     p[i] = rand();
   }
 #endif
+#ifdef CONFIG_MTRACE
+  init_mt();
+#endif
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 
 word_t paddr_read(paddr_t addr, int len) {
+#ifdef CONFIG_MTRACE
+  mt_pread(addr, len);
+#endif
   if (likely(in_pmem(addr))) return pmem_read(addr, len);
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
@@ -64,6 +139,9 @@ word_t paddr_read(paddr_t addr, int len) {
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
+#ifdef CONFIG_MTRACE
+  mt_pwrite(addr, len, data);
+#endif
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);

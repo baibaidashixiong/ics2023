@@ -69,7 +69,7 @@ static int cmd_si(char *args) {
   char *arg = strtok(NULL, " ");
   if (arg == NULL) cpu_exec(1);
   else if ((arg[0]-48) > 0)// '0'的ascii是48
-    cpu_exec(arg[0]-48);
+    cpu_exec(atoi(arg));
   else 
     return 1;
   return 0;
@@ -106,7 +106,8 @@ static int cmd_x(char *args) {
 
 static int cmd_p(char *args) {
   bool *success = false;
-  expr(args, success);
+  int value = expr(args, success);
+  printf("the hex of expr value is 0x%08x, dex is %d\n", value, value);
   return 0;
 }
 

@@ -43,6 +43,14 @@ typedef word_t vaddr_t;
 typedef MUXDEF(PMEM64, uint64_t, uint32_t) paddr_t;
 #define FMT_PADDR MUXDEF(PMEM64, "0x%016"PRIx64, "0x%08"PRIx32)
 typedef uint16_t ioaddr_t;
+#ifdef CONFIG_FTRACE
+typedef struct {
+    uint32_t addr;
+    char func_name[16];
+    uint32_t type;
+}FTRACE_FUNC;
+#define FUNC_NUM1 128
+#endif
 
 #include <debug.h>
 

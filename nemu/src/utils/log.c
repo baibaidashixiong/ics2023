@@ -16,7 +16,7 @@
 #include <common.h>
 
 extern uint64_t g_nr_guest_inst;
-FILE *log_fp = NULL;
+FILE *log_fp = NULL; /* for global info write */
 
 void init_log(const char *log_file) {
   log_fp = stdout;
