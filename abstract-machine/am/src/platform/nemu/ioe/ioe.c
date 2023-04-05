@@ -24,7 +24,7 @@ static void __am_uart_config(AM_UART_CONFIG_T *cfg)   { cfg->present = false; }
 static void __am_net_config (AM_NET_CONFIG_T *cfg)    { cfg->present = false; }
 
 typedef void (*handler_t)(void *buf);
-static void *lut[128] = {
+static void *lut[128] = {/* Look-Up-Table */
   [AM_TIMER_CONFIG] = __am_timer_config,
   [AM_TIMER_RTC   ] = __am_timer_rtc,
   [AM_TIMER_UPTIME] = __am_timer_uptime,
