@@ -30,6 +30,9 @@ typedef struct {
 
 extern NEMUState nemu_state;
 
+// ----------- csr  ------------
+word_t *csr_register(word_t imm);
+
 // ----------- timer -----------
 
 uint64_t get_time();
