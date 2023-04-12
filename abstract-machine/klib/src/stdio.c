@@ -4,9 +4,11 @@
 #include <stdarg.h>
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
+/* Width field, default width is 8 */
+#define BIT_WIDE_HEX 8
 
 int printf(const char *fmt, ...) {
-  char buffer[128];
+  char buffer[2048];/* to small buffer will cause stackoverflow */
   va_list ap;
   int ret;
 
@@ -28,7 +30,8 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
    */
   char buffer[32];
   char *txt, cha;
-  int num, len;
+  int num, len, len_p;
+  uint32_t addr_p;
   int i, j, len_format_flag = 0;
   for (i = 0, j = 0; fmt[i] != '\0'; ++i){
     if (fmt[i] != '%' && len_format_flag == 0){
@@ -56,6 +59,17 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
           out[j++] = buffer[k];
         break;
       
+      case 'p':
+        len_format_flag = 0;
+        addr_p = va_arg(ap, uint32_t);
+        for (len_p = 0; addr_p ; addr_p /= 16, ++len_p)
+          buffer[len_p] = addr_p % 16 + '0'; /* inverted sequence */
+        for (int k = 0; k < BIT_WIDE_HEX - len_p; ++k)
+          out[j++] = '0';/* add 0 if the length is not enough */
+        for (int k = len_p - 1; k >= 0; --k)
+          out[j++] = buffer[k];
+        break;
+
       case '0' ... '9':  /* for format like %02d */
         len_format_flag = 1;
         break;
