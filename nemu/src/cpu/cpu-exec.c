@@ -39,8 +39,14 @@ typedef struct {
 ItraceNode iringbuf[MAX_IRINGBUF];
 uint32_t inode = 0;
 #endif
-
-CPU_state cpu = {};
+/* 
+ *  for riscv32, initialize mstatus as 0x1800 to support difftest 
+ *   MPP(Machine Previous Privilege mode)[12,11] in mstatus
+ *   It stores the previous privilege mode that the processor was in before entering machine mode.
+ *   11: Machine mode, the most privileged mode and is typically used by 
+ *      the operating system kernel or hypervisor to manage system resources.
+ */
+CPU_state cpu = {.csr.mstatus = 0x1800};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
