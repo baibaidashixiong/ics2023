@@ -23,7 +23,17 @@
 #define Mr vaddr_read
 #define Mw vaddr_write
 #define CSR *csr_register
-#define ECALL(dnpc) { bool success; dnpc = (isa_raise_intr(isa_reg_str2val("a7", &success), s->pc)); }
+
+#ifdef CONFIG_ETRACE
+uint32_t etrace_no = 0;
+#define ETRACE_PRINT printf("\33[1;31metrace %d:\n\tepc:0x%x  mstatus:%x  mcause:%d  mtvec:0x%x\n\33[0m",\
+           etrace_no++, cpu.csr.mepc, cpu.csr.mstatus, cpu.csr.mcause, cpu.csr.mtvec);
+#endif
+
+#define ECALL(dnpc) do { bool success; \
+  dnpc = (isa_raise_intr(isa_reg_str2val("a7", &success), s->pc)); \
+  IFDEF(CONFIG_ETRACE, ETRACE_PRINT); \
+  } while(0)
 /* a7 stored to mcause */
 
 enum {
@@ -113,7 +123,8 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 110 ????? 11000 11", bltu   , B, s->dnpc = (src1 < src2) ? s->pc + imm : s->dnpc);
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, R(dest) = CSR(imm), CSR(imm) = src1);
   INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, R(dest) = CSR(imm); CSR(imm) |= src1);
-  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , I, ECALL(s->dnpc));
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , J, ECALL(s->dnpc));/* J Type? */
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , J, s->dnpc = cpu.csr.mepc +4);
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();

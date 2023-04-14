@@ -157,6 +157,10 @@ config DTRACE
   bool "Enable DEVICE trace"
   default n
 
+config ETRACE
+  bool "Enable EXCEPTION trace"
+  default n
+
 config ITRACE_COND
   depends on ITRACE
   string "Only trace instructions when the condition is true"
