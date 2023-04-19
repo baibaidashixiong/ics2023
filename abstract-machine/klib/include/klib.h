@@ -38,6 +38,11 @@ int    snprintf  (char *str, size_t size, const char *format, ...);
 int    vsprintf  (char *str, const char *format, va_list ap);
 int    vsnprintf (char *str, size_t size, const char *format, va_list ap);
 
+//ramdisk
+size_t ramdisk_read(void *buf, size_t offset, size_t len);
+size_t ramdisk_write(const void *buf, size_t offset, size_t len);
+size_t get_ramdisk_size();
+
 // assert.h
 #ifdef NDEBUG
   #define assert(ignore) ((void)0)
