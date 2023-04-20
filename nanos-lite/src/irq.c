@@ -3,7 +3,7 @@
 static Context* do_event(Event e, Context* c) {
   /* event processing */
   switch (e.event) {
-    case EVENT_YIELD: printf("irq event yield!\n");break;
+    case EVENT_YIELD: printf("\33[0mirq event yield!\n");break;
     case EVENT_SYSCALL: Log("EVENT_SYSCALL");
     case EVENT_NULL: Log("EVENT_NULL");
         do_syscall(c);break;
