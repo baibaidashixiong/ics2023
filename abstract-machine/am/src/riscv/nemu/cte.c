@@ -7,9 +7,13 @@ static Context* (*user_handler)(Event, Context*) = NULL;
 Context* __am_irq_handle(Context *c) {
   if (user_handler) {
     Event ev = {0};
+    /* Event distribution */
     switch (c->mcause) {
-      case -1: ev.event = EVENT_YIELD; printf("mcause yield!\n");break;
+      case 0:  ev.event = EVENT_NULL; break;
+      case 1:  ev.event = EVENT_SYSCALL; break;
+      case -1: ev.event = EVENT_YIELD; break;
       default:
+        printf("c->mcase=%d\n", c->mcause);
         ev.event = EVENT_ERROR; break;
     }
 
@@ -24,6 +28,7 @@ extern void __am_asm_trap(void);
 
 bool cte_init(Context*(*handler)(Event, Context*)) {
   // initialize exception entry
+  /* Registration__ am_ irq_ Handle callback function in __am_asm_trap */
   asm volatile("csrw mtvec, %0" : : "r"(__am_asm_trap));
 
   // register event handler

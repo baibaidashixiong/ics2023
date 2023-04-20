@@ -41,7 +41,7 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
        */
       /* (void*)  is a generic pointer type that can hold the address of any data type */
       ramdisk_read((void*)elf_phdr[i].p_vaddr, elf_phdr[i].p_offset, elf_phdr[i].p_memsz);
-      printf("paddr is :%p\n", elf_phdr[i].p_paddr);
+      // printf("paddr is :%p\n", elf_phdr[i].p_paddr);
       /* set block starting symbol(.bss) to zero */
       memset((void*)(elf_phdr[i].p_vaddr+elf_phdr[i].p_filesz), 0, elf_phdr[i].p_memsz - elf_phdr[i].p_filesz);
     }
