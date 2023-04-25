@@ -10,8 +10,10 @@ Context* __am_irq_handle(Context *c) {
     /* Event distribution */
     switch (c->mcause) {
       case 0:  ev.event = EVENT_NULL; break;
-      case 1:
-      case 4: ev.event = EVENT_SYSCALL; break;
+      case 1:/* sys_yield */
+      case 4:/* sys_write */
+      case 9:/* sys_brk */ 
+          ev.event = EVENT_SYSCALL; break;
       case -1: ev.event = EVENT_YIELD; break;
       default:
         printf("c->mcase=%d\n", c->mcause);

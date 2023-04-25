@@ -4,7 +4,6 @@
 #include <assert.h>
 #include <time.h>
 #include "syscall.h"
-#include<stdio.h>
 
 // helper macros
 #define _concat(x, y) x ## y
@@ -44,10 +43,10 @@
 
 intptr_t _syscall_(intptr_t type, intptr_t a0, intptr_t a1, intptr_t a2) {
   register intptr_t _gpr1 asm (GPR1) = type;/* set the syscall_number to a7 */
-  register intptr_t _gpr2 asm (GPR2) = a0;
-  register intptr_t _gpr3 asm (GPR3) = a1;
-  register intptr_t _gpr4 asm (GPR4) = a2;
-  register intptr_t ret asm (GPRx);
+  register intptr_t _gpr2 asm (GPR2) = a0;/* a0 */
+  register intptr_t _gpr3 asm (GPR3) = a1;/* a1 */
+  register intptr_t _gpr4 asm (GPR4) = a2;/* a2 */
+  register intptr_t ret asm (GPRx); /* a0, this variable/value return to user app */
   asm volatile (SYSCALL : "=r" (ret) : "r"(_gpr1), "r"(_gpr2), "r"(_gpr3), "r"(_gpr4));
   return ret;
 }
@@ -66,7 +65,20 @@ int _write(int fd, void *buf, size_t count) {
   return _syscall_(SYS_write, fd, (__intptr_t)buf, count);
 }
 
+extern intptr_t _end; /* defined by the linker */
+intptr_t program_break = (intptr_t)&_end;
+/* sbrk increases the programs data segment allocation by specified bytes */
 void *_sbrk(intptr_t increment) {
+  intptr_t program_break_pre = program_break;
+  if(_syscall_(SYS_brk, program_break + increment, 0, 0) == 0){
+    program_break = program_break + increment;
+    /* 
+     * returns a pointer to the previous break value
+     * return address of the start of a contiguous block of memory,
+     *  whcih is at least as large as the requested size
+     */
+    return (void *)program_break_pre;
+  }
   return (void *)-1;
 }
 

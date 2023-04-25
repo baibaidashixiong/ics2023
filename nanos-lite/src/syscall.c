@@ -1,5 +1,5 @@
 #include <common.h>
-#include <unistd.h>
+// #include <unistd.h>
 #include "syscall.h"
 
 void strace(uintptr_t index) {
@@ -30,6 +30,7 @@ void do_syscall(Context *c) {
      *
      */
     case SYS_write: ret = sys_write(a[0], (void*)a[1], a[2]); break;
+    case SYS_brk: ret = sys_brk((void *)a[1]); break;
     default: panic("Unhandled syscall ID = %d", a[3]);
   }
   strace(a[3]);
@@ -55,4 +56,11 @@ int sys_write(int fd, const void *buf, size_t count) {
     return count;
   }
   return -1;
+}
+
+int sys_brk(void *addr) {
+  /* for single task operating systems, 
+   *  we can always return 0(true) now
+   */
+  return 0;
 }
