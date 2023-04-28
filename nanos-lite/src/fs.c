@@ -28,8 +28,8 @@ size_t invalid_write(const void *buf, size_t offset, size_t len) {
 /* This is the information about all files in disk. */
 static Finfo file_table[] __attribute__((used)) = {
   [FD_STDIN]  = {"stdin", 0, 0, invalid_read, invalid_write},
-  [FD_STDOUT] = {"stdout", 0, 0, invalid_read, invalid_write},
-  [FD_STDERR] = {"stderr", 0, 0, invalid_read, invalid_write},
+  [FD_STDOUT] = {"stdout", 0, 0, invalid_read, serial_write},
+  [FD_STDERR] = {"stderr", 0, 0, invalid_read, serial_write},
 #include "files.h"
 };
 
@@ -85,6 +85,14 @@ size_t fs_write(int fd, const void *buf, size_t len) {
 
   assert(file_table[fd].size >= file_table[fd].open_offset);
   return len; /* on success, the number of bytes written is returned */
+}
+
+size_t sys_write(int fd, const void *buf, size_t count) {
+  WriteFn writeFn = file_table[fd].write;
+  if(writeFn) /* no need to judge fd type anymore */
+    return writeFn(buf, 0, count);
+  else /* file write */
+    return fs_write(fd, buf, count);
 }
 
 size_t fs_lseek(int fd, size_t offset, int whence) {

@@ -52,16 +52,6 @@ int sys_exit() {
   return 0;
 }
 
-int sys_write(int fd, const void *buf, size_t count) {
-  if(fd == 1 || fd == 2){/* stdout */
-    for(int i = 0; i < count; i++){
-      putch(*((const char*)buf + i));
-    }
-    return count;
-  }
-  else /* file write */
-    return fs_write(fd, buf, count);
-}
 
 int sys_brk(void *addr) {
   /* for single task operating systems, 
