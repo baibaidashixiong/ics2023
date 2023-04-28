@@ -11,8 +11,12 @@ Context* __am_irq_handle(Context *c) {
     switch (c->mcause) {
       case 0:  ev.event = EVENT_NULL; break;
       case 1:/* sys_yield */
+      case 2:/* sys_open */
+      case 3:/* sys_read */
       case 4:/* sys_write */
-      case 9:/* sys_brk */ 
+      case 7:/* sys_close */
+      case 8:/* sys_lseek */
+      case 9:/* sys_brk */
           ev.event = EVENT_SYSCALL; break;
       case -1: ev.event = EVENT_YIELD; break;
       default:

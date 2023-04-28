@@ -46,6 +46,13 @@ size_t get_ramdisk_size();
 //syscall.h
 void do_syscall(Context *c);
 
+//fs.h
+int fs_open(const char *pathname, int flags, int mode);
+size_t fs_read(int fd, void *buf, size_t len);
+size_t fs_write(int fd, const void *buf, size_t len);
+size_t fs_lseek(int fd, size_t offset, int whence);
+int fs_close(int fd);
+
 // assert.h
 #ifdef NDEBUG
   #define assert(ignore) ((void)0)

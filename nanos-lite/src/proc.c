@@ -5,6 +5,7 @@
 static PCB pcb[MAX_NR_PROC] __attribute__((used)) = {};
 static PCB pcb_boot = {};
 PCB *current = NULL;
+const char* file_name = "/bin/file-test";
 void naive_uload(PCB *pcb, const char *filename);
 
 void switch_boot_pcb() {
@@ -25,7 +26,7 @@ void init_proc() {
 
   Log("Initializing processes...");
 
-  naive_uload(NULL, NULL);
+  naive_uload(NULL, file_name);
   // load program here
 
 }
