@@ -53,6 +53,21 @@ size_t fs_write(int fd, const void *buf, size_t len);
 size_t fs_lseek(int fd, size_t offset, int whence);
 int fs_close(int fd);
 
+//gettimeofday
+#define __time_t uint64_t
+#define __suseconds_t uint64_t
+struct timeval
+{
+    __time_t tv_sec;		/* Seconds.  */
+  __suseconds_t tv_usec;	/* Microseconds.  */
+};
+struct timezone {
+	int	tz_minuteswest;	/* minutes west of Greenwich */
+	int	tz_dsttime;	/* type of dst correction */
+};
+int sys_gettimeofday(struct timeval *tv, struct timezone *tz);
+int sys_settimeofday(const struct timeval *tv, const struct timezone *tz);
+
 //vfs.h
 size_t serial_write(const void *buf, size_t offset, size_t len);
 size_t events_read(void *buf, size_t offset, size_t len);

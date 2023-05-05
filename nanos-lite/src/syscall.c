@@ -35,6 +35,7 @@ void do_syscall(Context *c) {
     case SYS_read: ret = fs_read(a[0], (void *)a[1], a[2]); break;
     case SYS_lseek: ret = fs_lseek(a[0], a[1], a[2]); break;
     case SYS_close: ret = fs_close(a[0]); break;
+    case SYS_gettimeofday: ret = sys_gettimeofday((struct timeval *)a[0], (struct timezone *)a[1]); break;
     default: panic("Unhandled syscall ID = %d", a[3]);
   }
   // strace(a[3]); /* strace switch */
@@ -57,5 +58,17 @@ int sys_brk(void *addr) {
   /* for single task operating systems, 
    *  we can always return 0(true) now
    */
+  return 0;
+}
+
+int sys_gettimeofday(struct timeval *tv, struct timezone *tz) {
+  uint64_t us = io_read(AM_TIMER_UPTIME).us;
+  if (tv != NULL) {
+    tv->tv_sec = us / (1000*1000);
+    tv->tv_usec = us % (1000*1000);
+  }
+  if (tz != NULL) {
+    panic("the tz argument should normally be specified as NULL");
+  }
   return 0;
 }
