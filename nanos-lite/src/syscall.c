@@ -64,8 +64,8 @@ int sys_brk(void *addr) {
 int sys_gettimeofday(struct timeval *tv, struct timezone *tz) {
   uint64_t us = io_read(AM_TIMER_UPTIME).us;
   if (tv != NULL) {
-    tv->tv_sec = us / (1000*1000);
-    tv->tv_usec = us % (1000*1000);
+    tv->tv_sec = us / (1000*1000);/* 1000,000 one million microseconds == 1 second */
+    tv->tv_usec = us % (1000*1000); /* tv_usec range from 0 to 999999 */
   }
   if (tz != NULL) {
     panic("the tz argument should normally be specified as NULL");
