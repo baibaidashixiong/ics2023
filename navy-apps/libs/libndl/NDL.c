@@ -4,6 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <fcntl.h>
+#include <assert.h>
 
 static int evtdev = -1;
 static int fbdev = -1;
@@ -20,7 +22,10 @@ uint32_t NDL_GetTicks() {
 }
 
 int NDL_PollEvent(char *buf, int len) {
-  return 0;
+  int fp = open("/dev/events", O_RDONLY);
+  int ret = read(fp, buf, len);
+  assert(close(fp) == 0);
+  return ret == 0 ? 0 : 1;
 }
 
 void NDL_OpenCanvas(int *w, int *h) {

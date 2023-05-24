@@ -102,11 +102,100 @@ int sprintf(char *out, const char *fmt, ...) {
 }
 
 int snprintf(char *out, size_t n, const char *fmt, ...) {
-  panic("Not implemented");
+  va_list ap;
+  va_start(ap, fmt);
+  int len = vsnprintf(out, n, fmt, ap);
+  va_end(ap);
+  return len;
 }
 
 int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
-  panic("Not implemented");
+  int written = 0; // Number of characters written to the out
+  // Iterate through the fmt string
+  while (*fmt != '\0')
+  {
+      // Check if there is enough space in the out
+      if (written >= n - 1)
+        break;
+      if (*fmt == '%')
+      {
+        fmt++; // Move past '%'
+        // Handle fmt specifiers
+        switch (*fmt)
+        {
+          case 's':
+          {
+            const char* str = va_arg(ap, const char*);
+            // Copy the string to the out
+            while (*str != '\0' && written < n - 1)
+            {
+              out[written] = *str;
+              str++;
+              written++;
+            }
+            break;
+          }
+          case 'd':
+          {
+            int num = va_arg(ap, int);
+            int numLength = 0;
+            // Calculate the number of digits in the integer
+            if (num == 0)
+              numLength = 1;
+            else
+            {
+              int temp = num;
+              while (temp != 0)
+              {
+                temp /= 10;
+                numLength++;
+              }
+            }
+            // Check if there is enough space in the out
+            if (written + numLength >= n - 1)
+              break;
+            // Convert the integer to a string
+            char numStr[12]; // Assuming a maximum of 12 digits for the integer
+            int i = numLength - 1;
+            if (num == 0)
+              numStr[i] = '0';
+            else
+            {
+              while (num != 0)
+              {
+                numStr[i] = '0' + (num % 10);
+                num /= 10;
+                i--;
+              }
+            }
+            // Copy the integer string to the out
+            for (int j = 0; j < numLength; j++)
+            {
+              out[written] = numStr[j];
+              written++;
+            }
+            break;
+          }
+          // Add support for more fmt specifiers as needed
+          default:
+            // Unsupported fmt specifier, ignore it
+            break;
+          }
+        }
+      else
+      {
+        // Copy regular characters to the buffer
+        out[written] = *fmt;
+        written++;
+      }
+      fmt++;
+  }
+  // Add null terminator to the buffer
+  if (written < n)
+    out[written] = '\0';
+  else if (n > 0)
+    out[n - 1] = '\0';
+  return written;
 }
 
 #endif

@@ -24,6 +24,7 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
    */
   int fd = fs_open(filename, 0, 0);/* ignore flags and mode in sys */
 
+  //printf("filename is %s, fd is %d\n",filename, fd);
   Elf_Ehdr elf_head;
   // ramdisk_read(&elf_head, 0, sizeof(Elf_Ehdr));
   fs_read(fd, &elf_head, sizeof(Elf_Ehdr));

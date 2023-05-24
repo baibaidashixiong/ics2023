@@ -48,6 +48,15 @@ enum {
   AM_KEY_NONE = 0,
   AM_KEYS(AM_KEY_NAMES)
 };
+/*
+ *  enum {
+ *    AM_KEY_NONE = 0,
+ *    AM_KEY_ESCAPE,
+ *    AM_KEY_F1,
+ *    AM_KEY_F2,
+ *    ...
+ *  }
+ */
 
 // GPU
 

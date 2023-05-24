@@ -38,7 +38,7 @@ void do_syscall(Context *c) {
     case SYS_gettimeofday: ret = sys_gettimeofday((struct timeval *)a[0], (struct timezone *)a[1]); break;
     default: panic("Unhandled syscall ID = %d", a[3]);
   }
-  // strace(a[3]); /* strace switch */
+  //strace(a[3]); /* strace switch */
   /* return system call status to user space */
   c->GPR0 = ret;
 }
