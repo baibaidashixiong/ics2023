@@ -18,6 +18,9 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 #include <utils.h>
+#ifdef CONFIG_DIFFTEST
+#include "cpu/difftest.h"
+#endif
 
 #define R(i) gpr(i)
 #define Mr vaddr_read
@@ -122,9 +125,9 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 100 ????? 11000 11", blt    , B, s->dnpc = ((sword_t)src1 < (sword_t)src2) ? s->pc + imm : s->dnpc);
   INSTPAT("??????? ????? ????? 110 ????? 11000 11", bltu   , B, s->dnpc = (src1 < src2) ? s->pc + imm : s->dnpc);
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, R(dest) = CSR(imm), CSR(imm) = src1);
-  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, R(dest) = CSR(imm); CSR(imm) |= src1);
-  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , J, ECALL(s->dnpc));/* J Type? */
-  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , J, s->dnpc = cpu.csr.mepc +4);
+  INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, R(dest) = CSR(imm), CSR(imm) |= src1);
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , I, ECALL(s->dnpc);IFDEF(CONFIG_DIFFTEST,difftest_skip_ref()););
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , J, s->dnpc = cpu.csr.mepc);//, cpu.csr.mstatus = ((cpu.csr.mstatus & 0x80 ) >> 4) | 0x80);/* Return from traps in M-mode, and MRET copies MPIE into MIE, then sets MPIE. */
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();
