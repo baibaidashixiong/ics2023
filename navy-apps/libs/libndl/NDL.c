@@ -29,6 +29,18 @@ int NDL_PollEvent(char *buf, int len) {
 }
 
 void NDL_OpenCanvas(int *w, int *h) {
+  if (*w == 0){
+    *w = screen_w;
+  }else if(*w > screen_w){
+    assert(0);
+  }
+  if (*h == 0){
+    *h = screen_h;
+  }else if(*h > screen_h){
+    assert(0);
+  }
+  printf("opencanvas screen_w is %d, screen_h is %d\n", screen_w, screen_h);
+
   if (getenv("NWM_APP")) {
     int fbctl = 4;
     fbdev = 5;
@@ -65,10 +77,49 @@ int NDL_QueryAudio() {
   return 0;
 }
 
+static void read_key_value(char *str, char *key, int* value){
+  char buffer[128];
+  int len = 0;
+  for (char* c = str; *c; ++c){
+    if(*c != ' '){
+      buffer[len++] = *c;
+    }
+  }
+  buffer[len] = '\0';
+  /* %[a-zA-Z] matches any sequence of alphabetical characters */
+  sscanf(buffer, "%[a-zA-Z]:%d", key, value);
+}
+
 int NDL_Init(uint32_t flags) {
   if (getenv("NWM_APP")) {
     evtdev = 3;
   }
+
+  char info[128], key[64];
+  int value;
+
+  int dispinfo = open("/proc/dispinfo", 0);
+  /* The entire call process:
+      navy:read -> navy:syscall -> nanos:fs_read -> callback func:nanos:dispinfo_read
+            then return here and set screen size information to buf
+     question: What is the conversion process of navy:read to navy:syscall(fs_read)?
+   */
+  read(dispinfo, info, sizeof(info)); /* read screen size information through callback function dispinfo_read to info */
+  close(dispinfo);
+
+  /* get string format WIDTH : %d */
+  char *token = strtok(info, "\n");
+  /* get remain string */
+  while( token != NULL ) {
+    read_key_value(token, key, &value);
+    if(strcmp(key, "WIDTH") == 0){
+      screen_w = value;
+    } else if(strcmp(key, "HEIGHT") == 0) {
+      screen_h = value;
+    }
+    token = strtok(NULL, "\n");
+  }
+  printf("width = %d, height = %d.\n", screen_w, screen_h);
   return 0;
 }
 

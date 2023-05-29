@@ -102,6 +102,7 @@ int sprintf(char *out, const char *fmt, ...) {
 }
 
 int snprintf(char *out, size_t n, const char *fmt, ...) {
+  /* write at most n bytes to out */
   va_list ap;
   va_start(ap, fmt);
   int len = vsnprintf(out, n, fmt, ap);
