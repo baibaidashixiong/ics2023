@@ -39,6 +39,18 @@ uint32_t etrace_no = 0;
   } while(0)
 /* a7 stored to mcause */
 
+// clear MIE(4th bit) flag
+// set MPIE to MIE
+// set MPIE to 1
+// clear MPP flag to consistent with spike
+#define MRET { \
+  s->dnpc = cpu.csr.mepc; \
+  cpu.csr.mstatus &= ~(1<<3); \
+  cpu.csr.mstatus |= ((cpu.csr.mstatus&(1<<7))>>4); \
+  cpu.csr.mstatus |= (1<<7); \
+  cpu.csr.mstatus &= ~((1<<11)+(1<<12)); \
+}
+
 enum {
   TYPE_I, TYPE_U, TYPE_S, TYPE_J, TYPE_R, TYPE_B,
   TYPE_N, // none
@@ -127,7 +139,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, R(dest) = CSR(imm), CSR(imm) = src1);
   INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, R(dest) = CSR(imm), CSR(imm) |= src1);
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , I, ECALL(s->dnpc);IFDEF(CONFIG_DIFFTEST,difftest_skip_ref()););
-  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , J, s->dnpc = cpu.csr.mepc);//, cpu.csr.mstatus = ((cpu.csr.mstatus & 0x80 ) >> 4) | 0x80);/* Return from traps in M-mode, and MRET copies MPIE into MIE, then sets MPIE. */
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , J, MRET);
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();
