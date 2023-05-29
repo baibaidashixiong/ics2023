@@ -24,13 +24,14 @@ size_t serial_write(const void *buf, size_t offset, size_t len) {
 size_t events_read(void *buf, size_t offset, size_t len) {
   AM_INPUT_KEYBRD_T ev = io_read(AM_INPUT_KEYBRD); /* AM_INPUT_KEYBRD_T defined in amdev.h */
   if (ev.keycode == AM_KEY_NONE) {
-    // *(char*)buf = '\0';
+    /* clear buffer
+         question: is clear buffer necessary? why?
+     */
+    *(char*)buf = '\0';
     return 0;
   }
   int ret = snprintf(buf, len, "%s %s\n", ev.keydown ? "kd" : "ku", keyname[ev.keycode]);
-  //int ret = 1;
-  printf("ret is %d\n", ret);
-  printf("%s\n", buf);
+  // printf("ret is %d\n", ret);
   return ret;
 }
 

@@ -57,6 +57,12 @@ size_t fs_read(int fd, void *buf, size_t len) {
     Log("read %s", file_table[fd].name);
     return 0;
   }
+  // register readFn callback function
+  ReadFn readFn = file_table[fd].read;
+  if (readFn != NULL) {
+    /* for serial and keyboard device, currently offset is 0 */
+    return readFn(buf, 0, len);/* call callback function */
+  }
   int fs_size = file_table[fd].size;
   int fs_open_offset = file_table[fd].open_offset;
   for(int i = 0; i < LENGTH(file_table); i++) {
@@ -78,6 +84,12 @@ size_t fs_read(int fd, void *buf, size_t len) {
 size_t fs_write(int fd, const void *buf, size_t len) {
   int fs_open_offset = file_table[fd].open_offset;
   int fs_size = file_table[fd].size;
+  // register writeFn callback function
+  WriteFn writeFn = file_table[fd].write;
+  if (writeFn != NULL) {
+    // TODO: prepare parameters
+    return writeFn(buf, 0, len);
+  }
   if((fs_open_offset + len) >= fs_size)
     len = fs_size - fs_open_offset;
   ramdisk_write(buf, file_table[fd].disk_offset + fs_open_offset, len);
