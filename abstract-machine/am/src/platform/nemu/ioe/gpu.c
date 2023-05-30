@@ -26,9 +26,10 @@ void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
 }
 
 void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
+  /* draw (w,h) rectangle start from the position of (x,y)*/
   /*
-   * This method will refresh the entire screen 
-   *   multiple times in sequence  
+   * This method will refresh the entire screen
+   *   multiple times in sequence
    */
   int x = ctl->x, y = ctl->y, w = ctl->w, h = ctl->h;
   if(!ctl->sync && (w == 0 || h ==0)) return; 
@@ -70,4 +71,17 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
 void __am_gpu_status(AM_GPU_STATUS_T *status) {
   /* read the status from device address SYNC_ADDR */
   status->ready = (bool)inl(SYNC_ADDR);
+}
+
+void __am_gpu_memcpy(AM_GPU_MEMCPY_T *params) {
+  uint32_t *src = params->src, *dst = (uint32_t *)(FB_ADDR + params->dest);
+  /* sizeof(uint32_t) = 4 */
+  for (int i = 0; i < params->size >> 2; i++, src++, dst++) {
+    *dst = *src;
+  }
+  char *c_src = (char *)src, *c_dst = (char *)dst;
+  /* copy the rest data */
+  for (int i = 0; i < (params->size & 3); i++) {
+    c_dst[i] = c_src[i];
+  }
 }

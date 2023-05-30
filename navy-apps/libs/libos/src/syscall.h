@@ -49,7 +49,6 @@ char *syscall_names[] = {
 
 int sys_yield();
 int sys_exit();
-int sys_write(int fd, const void *buf, size_t count);
 int sys_brk(void *addr);
 
 #endif

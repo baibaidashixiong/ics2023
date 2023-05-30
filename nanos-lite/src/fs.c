@@ -13,7 +13,7 @@ typedef struct {
   size_t open_offset; /* operating position offset in current file */
 } Finfo;
 
-enum {FD_STDIN, FD_STDOUT, FD_STDERR, FD_FB, DEV_EVENTS};
+enum {FD_STDIN, FD_STDOUT, FD_STDERR, FD_FB};
 
 size_t invalid_read(void *buf, size_t offset, size_t len) {
   panic("should not reach here");
@@ -30,13 +30,15 @@ static Finfo file_table[] __attribute__((used)) = {
   [FD_STDIN]  = {"stdin", 0, 0, invalid_read, invalid_write},
   [FD_STDOUT] = {"stdout", 0, 0, invalid_read, serial_write},
   [FD_STDERR] = {"stderr", 0, 0, invalid_read, serial_write},
+  [FD_FB] = {"/dev/fb", 0, 0, invalid_read, fb_write},
   {"/dev/events", 0, 0, events_read, invalid_write},
   {"/proc/dispinfo", 0, 0, dispinfo_read, invalid_write},
 #include "files.h"
 };
 
 void init_fs() {
-  // TODO: initialize the size of /dev/fb
+  AM_GPU_CONFIG_T ev = io_read(AM_GPU_CONFIG);
+  file_table[FD_FB].size = ev.width * ev.height * sizeof(size_t); // initialize the size of /dev/fb
 }
 
 int fs_open(const char *pathname, int flags, int mode) {/* for sfs, ignore flags and mode */
@@ -88,8 +90,10 @@ size_t fs_write(int fd, const void *buf, size_t len) {
   // register writeFn callback function
   WriteFn writeFn = file_table[fd].write;
   if (writeFn != NULL) {
-    // TODO: prepare parameters
-    return writeFn(buf, 0, len);
+    /* set offset (what is its purpose?)*/
+    printf("open_offset is %d\n", file_table[fd].open_offset);
+    file_table[fd].open_offset += len;
+    return writeFn(buf, fs_open_offset, len);
   }
   if((fs_open_offset + len) >= fs_size)
     len = fs_size - fs_open_offset;
@@ -99,14 +103,6 @@ size_t fs_write(int fd, const void *buf, size_t len) {
 
   assert(file_table[fd].size >= file_table[fd].open_offset);
   return len; /* on success, the number of bytes written is returned */
-}
-
-size_t sys_write(int fd, const void *buf, size_t count) {
-  WriteFn writeFn = file_table[fd].write;
-  if(writeFn) /* no need to judge fd type anymore */
-    return writeFn(buf, 0, count);
-  else /* file write */
-    return fs_write(fd, buf, count);
 }
 
 size_t fs_lseek(int fd, size_t offset, int whence) {

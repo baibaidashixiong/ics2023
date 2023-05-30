@@ -39,7 +39,7 @@ void NDL_OpenCanvas(int *w, int *h) {
   }else if(*h > screen_h){
     assert(0);
   }
-  printf("opencanvas screen_w is %d, screen_h is %d\n", screen_w, screen_h);
+  // printf("opencanvas screen_w is %d, screen_h is %d\n", screen_w, screen_h);
 
   if (getenv("NWM_APP")) {
     int fbctl = 4;
@@ -60,7 +60,20 @@ void NDL_OpenCanvas(int *w, int *h) {
   }
 }
 
+
 void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
+  /* set the canvas position at center, screen_w is set in NDL_Init */
+  int canvas_x = (screen_w - w) / 2, canvas_y = (screen_h - h) / 2;
+  int framebuffer = open("/dev/fb", O_RDWR);
+  for (int i = 0; i < h; i++) {
+    /*
+        ----------
+        ---.
+        the . position is ((y=1) + (i=0))*(screen_w=10) + (canvas_x=3)
+     */
+    lseek(framebuffer, ((canvas_y + i) * screen_w + (canvas_x)) * sizeof(uint32_t), SEEK_SET);
+    ssize_t s = write(framebuffer, pixels + w * i, w * sizeof(uint32_t));/* write one line a time */
+  }
 }
 
 void NDL_OpenAudio(int freq, int channels, int samples) {
