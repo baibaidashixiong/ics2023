@@ -29,7 +29,7 @@ void do_syscall(Context *c) {
      *        printf will exit.
      *
      */
-    case SYS_write: ret = fs_write(a[0], (void*)a[1], a[2]); break;
+    case SYS_write: ret = sys_write(a[0], (void*)a[1], a[2]); break;
     case SYS_brk: ret = sys_brk((void *)a[1]); break;
     case SYS_open: ret = fs_open((char *)a[0], a[1], a[2]); break;
     case SYS_read: ret = fs_read(a[0], (void *)a[1], a[2]); break;
