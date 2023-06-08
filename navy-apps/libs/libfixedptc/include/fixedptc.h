@@ -102,9 +102,10 @@ typedef	__uint128_t fixedptud;
 
 #define FIXEDPT_VCSID "$Id$"
 
-#define FIXEDPT_FBITS	(FIXEDPT_BITS - FIXEDPT_WBITS)
-#define FIXEDPT_FMASK	(((fixedpt)1 << FIXEDPT_FBITS) - 1)
+#define FIXEDPT_FBITS	(FIXEDPT_BITS - FIXEDPT_WBITS)/* fractional part */
+#define FIXEDPT_FMASK	(((fixedpt)1 << FIXEDPT_FBITS) - 1)/* fractional part mask, extract the 0xff part */
 
+/* here +-0.5 is used to increase precision when there are many digits behind the decimal separator */
 #define fixedpt_rconst(R) ((fixedpt)((R) * FIXEDPT_ONE + ((R) >= 0 ? 0.5 : -0.5)))
 #define fixedpt_fromint(I) ((fixedptd)(I) << FIXEDPT_FBITS)
 #define fixedpt_toint(F) ((F) >> FIXEDPT_FBITS)
@@ -112,7 +113,7 @@ typedef	__uint128_t fixedptud;
 #define fixedpt_sub(A,B) ((A) - (B))
 #define fixedpt_fracpart(A) ((fixedpt)(A) & FIXEDPT_FMASK)
 
-#define FIXEDPT_ONE	((fixedpt)((fixedpt)1 << FIXEDPT_FBITS))
+#define FIXEDPT_ONE	((fixedpt)((fixedpt)1 << FIXEDPT_FBITS))/* 0x100 */
 #define FIXEDPT_ONE_HALF (FIXEDPT_ONE >> 1)
 #define FIXEDPT_TWO	(FIXEDPT_ONE + FIXEDPT_ONE)
 #define FIXEDPT_PI	fixedpt_rconst(3.14159265358979323846)
@@ -127,35 +128,45 @@ typedef	__uint128_t fixedptud;
 
 /* Multiplies a fixedpt number with an integer, returns the result. */
 static inline fixedpt fixedpt_muli(fixedpt A, int B) {
-	return 0;
+	return A * B;
 }
 
 /* Divides a fixedpt number with an integer, returns the result. */
 static inline fixedpt fixedpt_divi(fixedpt A, int B) {
-	return 0;
+	return A / B;
 }
 
 /* Multiplies two fixedpt numbers, returns the result. */
 static inline fixedpt fixedpt_mul(fixedpt A, fixedpt B) {
-	return 0;
+	/*
+		assume the number to be represented is a, so a * 2^8 = A,
+			A * B = a * 2^8 * b * 2^8 = ab * 2^16,
+			so use fixedpt to denote ab should be ab * 2^8 = A*B/2^8
+	 */
+	return fixedpt_toint(A * B);
 }
 
 
 /* Divides two fixedpt numbers, returns the result. */
 static inline fixedpt fixedpt_div(fixedpt A, fixedpt B) {
-	return 0;
+	/*
+		A = a * 2^8, B = b * 2^8
+		a / b = (A / 2^8) / (B / 2^8) = A / B, which is int type now
+		use fixedpt to denote a/b = (A / B) * 2^8
+	 */
+	return (fixedpt)(fixedpt_fromint(A / B));
 }
 
 static inline fixedpt fixedpt_abs(fixedpt A) {
-	return 0;
+	return A >= 0 ? A : -A;
 }
 
 static inline fixedpt fixedpt_floor(fixedpt A) {
-	return 0;
+	return A & (~FIXEDPT_FMASK);
 }
 
 static inline fixedpt fixedpt_ceil(fixedpt A) {
-	return 0;
+	return ((A & FIXEDPT_FMASK) == 0) ? A : (A & (~FIXEDPT_FMASK)) + FIXEDPT_ONE;
 }
 
 /*
