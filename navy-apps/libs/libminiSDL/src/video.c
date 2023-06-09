@@ -4,13 +4,67 @@
 #include <string.h>
 #include <stdlib.h>
 
+/*
+  perform a fast surface copy to a destination surface
+    src:      the SDL_Surface structure to be copied from
+    srcrect:  the SDL_Rect structure representing the rectangle to be copied,
+                or NULL to copy the entire surface
+    dst:      the SDL_Surface structure that is the blit target
+    dstrect:  the SDL_Rect structure representing the rectangle that is copied into
+ */
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+
+  uint32_t *scr_background = (uint32_t *)src->pixels;
+  uint32_t *dst_background = (uint32_t *)dst->pixels;
+  int src_w = src->w;
+  int src_h = src->h;
+  int dst_w = dst->w;
+  int dst_h = dst->h;
+  int dstrect_x = dstrect->x;
+  int dstrect_y = dstrect->y;
+
+  if (srcrect == NULL) {
+    assert(src_w <= (dst_w - dstrect_x));
+    assert(src_h <= (dst_h - dstrect_y));
+    for (int i = 0; i < src_h; ++i) {
+        for (int j = 0; j < src_w; ++j) {
+            dst_background[(dstrect_y + i) * dst_w + dstrect_x + j] = scr_background[i * src_w + j];
+        }
+    }
+
+    return;
+  } else {
+    assert(0);
+  }
 }
 
+/*
+    dst:      the SDL_Surface structure that is the drawing target
+    dstrect:  the SDL_Rect structure representing the rectangle to fill,
+                or NULL to fill the entire surface
+    color:    the color to fill with
+ */
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
-  assert(0);
+  uint32_t *background = (uint32_t *)dst->pixels;
+  if (dstrect == NULL) {
+    /* fill the whole background with color */
+    for (int i = 0; i < dst->w * dst->h; ++i) background[i] = color;
+      return;
+  }
+
+  int rect_x = dstrect->x;
+  int rect_y = dstrect->y;
+  int rect_w = dstrect->w < (dst->w - dstrect->x) ? dstrect->w : (dst->w - dstrect->x);
+  int rect_h = dstrect->h < (dst->h - dstrect->y) ? dstrect->h : (dst->h - dstrect->y);
+
+  for (int i = 0; i < rect_h; ++i) {
+    for (int j = 0; j < rect_w; ++j) {
+      background[(rect_y + i) * dst->w + rect_x + j] = color;
+    }
+  }
+  return;
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
