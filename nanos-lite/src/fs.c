@@ -43,7 +43,8 @@ void init_fs() {
 
 int fs_open(const char *pathname, int flags, int mode) {/* for sfs, ignore flags and mode */
   for(int i = 0; i < LENGTH(file_table); i++) {
-    //printf("file_table name is %s\n",file_table[i].name);
+    // printf("file_table name is %s\n",file_table[i].name);
+    // printf("path name is %s\n",file_table[i].name);
     if(strcmp(pathname, file_table[i].name) == 0) {
       file_table[i].fd = i;
       file_table[i].open_offset = 0;
@@ -91,7 +92,7 @@ size_t fs_write(int fd, const void *buf, size_t len) {
   WriteFn writeFn = file_table[fd].write;
   if (writeFn != NULL) {
     /* set offset (what is its purpose?)*/
-    printf("open_offset is %d\n", file_table[fd].open_offset);
+    // printf("open_offset is %d\n", file_table[fd].open_offset);
     file_table[fd].open_offset += len;
     return writeFn(buf, fs_open_offset, len);
   }

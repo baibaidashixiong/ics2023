@@ -24,7 +24,7 @@ uint32_t NDL_GetTicks() {
 int NDL_PollEvent(char *buf, int len) {
   int fp = open("/dev/events", O_RDONLY);
   int ret = read(fp, buf, len);
-  assert(close(fp) == 0);
+  // assert(close(fp) == 0);
   return ret == 0 ? 0 : 1;
 }
 
@@ -48,7 +48,7 @@ void NDL_OpenCanvas(int *w, int *h) {
     char buf[64];
     int len = sprintf(buf, "%d %d", screen_w, screen_h);
     // let NWM resize the window and create the frame buffer
-    write(fbctl, buf, len);
+    assert(write(fbctl, buf, len) != -1);
     while (1) {
       // 3 = evtdev
       int nread = read(3, buf, sizeof(buf) - 1);
@@ -117,7 +117,7 @@ int NDL_Init(uint32_t flags) {
             then return here and set screen size information to buf
      question: What is the conversion process of navy:read to navy:syscall(fs_read)?
    */
-  read(dispinfo, info, sizeof(info)); /* read screen size information through callback function dispinfo_read to info */
+  assert(read(dispinfo, info, sizeof(info)) != -1); /* read screen size information through callback function dispinfo_read to info */
   close(dispinfo);
 
   /* get string format WIDTH : %d */
