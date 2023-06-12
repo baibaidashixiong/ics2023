@@ -20,7 +20,7 @@ enum SDL_Keys {
 enum SDL_EventType {
   SDL_KEYDOWN,
   SDL_KEYUP,
-  SDL_USEREVENT,
+  SDL_USEREVENT, /* wait for user event */
 };
 
 #define SDL_EVENTMASK(ev_type) (1u << (ev_type))

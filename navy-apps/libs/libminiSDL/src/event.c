@@ -19,20 +19,10 @@ enum SDL_EventType SDLD_TYPE_CHOOSE(const char* str) {
   return SDLK_NONE;
 }
 
-int SDL_PushEvent(SDL_Event *ev) {
-  assert(0);
-  return 0;
-}
-
-/* event distribution */
-int SDL_PollEvent(SDL_Event *ev) {
-  assert(0);
-  return 0;
-}
-
-int SDL_WaitEvent(SDL_Event *event) {
-  event->type = SDL_KEYUP;/* refresh the status of event.type */
+/* event distribution for SDL Keyboard events */
+int SDLK_PollEvent(SDL_Event *ev, uint8_t SDL_EventType) {
   char buf[16];
+  ev->type = SDL_EventType;/* refresh the status of event.type */
   int ret = NDL_PollEvent(buf, sizeof(buf));/* obtain key information */
   char *key_type = strtok(buf, " ");
   if(!ret || (strcmp(key_type, "kd") != 0)){
@@ -41,10 +31,24 @@ int SDL_WaitEvent(SDL_Event *event) {
   }
   /* be careful, there will be a `\n` written into buf, so it should be split here */
   char *key_value = strtok(NULL, "\n");
-  event->type = SDL_KEYDOWN;
+  ev->type = SDL_KEYDOWN;
   // sprintf(key_value, "%s", key_value);
-  event->key.keysym.sym = SDLD_TYPE_CHOOSE(key_value);
+  ev->key.keysym.sym = SDLD_TYPE_CHOOSE(key_value);
   return 1;
+}
+
+int SDL_PushEvent(SDL_Event *ev) {
+  assert(0);
+  return 0;
+}
+
+/* event distribution */
+int SDL_PollEvent(SDL_Event *ev) {
+  return SDLK_PollEvent(ev, SDL_USEREVENT);
+}
+
+int SDL_WaitEvent(SDL_Event *event) {
+  return SDLK_PollEvent(event, SDL_USEREVENT);
 }
 
 int SDL_PeepEvents(SDL_Event *ev, int numevents, int action, uint32_t mask) {

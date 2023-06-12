@@ -23,6 +23,14 @@ static void sh_prompt() {
 }
 
 static void sh_handle_cmd(const char *cmd) {
+  char buf[64];
+  strcpy(buf, cmd);
+  char *command = strtok(buf, " ");
+  if(strcmp(buf, "echo") == 0){
+    /* fulfill the simplest echo command */
+    char *value = strtok(NULL, "\n");
+    sh_printf("%s\n", value);
+  }
 }
 
 void builtin_sh_run() {
