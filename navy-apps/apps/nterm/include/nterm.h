@@ -47,7 +47,15 @@ private:
 
 public:
   enum class Mode {
+    /* In raw mode, the program directly receives each character
+     as it is typed, without waiting for the Enter key,
+      and the program has more control over input handling. */
     raw,
+    /* cooked mode typically refers to a line-oriented input mode
+      where input is processed after the user presses the Enter key.
+      The system may perform operations like buffering, line editing,
+      and interpreting special characters (such as backspace or arrow keys)
+      before providing the processed input to the program. */
     cook,
   } mode;
 
