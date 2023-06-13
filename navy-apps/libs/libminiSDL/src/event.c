@@ -41,14 +41,15 @@ int SDLK_PollEvent(SDL_Event *ev, uint8_t SDL_EventType) {
   /* obtain key information, return 1 if keyevent happend */
   int ret = NDL_PollEvent(buf, sizeof(buf));
   char *key_type = strtok(buf, " ");
-  ev->type = SDLEvent_TYPE_CHOOSE(key_type);
   if(ret) {
+    ev->type = SDLEvent_TYPE_CHOOSE(key_type);
     // printf("evt type is %d, \n", ev->type);
     /* be careful, there will be a `\n` written into buf, so it should be split here */
     char *key_value = strtok(NULL, "\n");
     ev->key.keysym.sym = SDLD_TYPE_CHOOSE(key_value);
     return 1;
   }
+  ev->type = SDL_USEREVENT;
   return 0;
 }
 
