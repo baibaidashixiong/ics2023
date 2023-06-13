@@ -22,10 +22,12 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   int src_h = src->h;
   int dst_w = dst->w;
   int dst_h = dst->h;
-  int dstrect_x = dstrect->x;
-  int dstrect_y = dstrect->y;
+  /* the destination position (upper left corner) is (0, 0) if dstrect is NULL */
+  int dstrect_x = dstrect ? dstrect->x : 0;
+  int dstrect_y = dstrect ? dstrect->y : 0;
 
   if (srcrect == NULL) {
+    /* the entire surface is copied if srcrect is NULL */
     assert(src_w <= (dst_w - dstrect_x));
     assert(src_h <= (dst_h - dstrect_y));
     for (int i = 0; i < src_h; ++i) {
@@ -36,7 +38,17 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
 
     return;
   } else {
-    assert(0);
+    int srcrect_x = srcrect->x;
+    int srcrect_y = srcrect->y;
+    int width = srcrect->w < (dst_w - dstrect_x) ? srcrect->w : (dst_w - dstrect_x);
+    int height = srcrect->h < (dst_h - dstrect_y) ? srcrect->h : (dst_h - dstrect_y);
+
+    for (int i = 0; i < height; ++i) {
+      for (int j = 0; j < width; ++j) {
+        dst_background[(dstrect_y + i) * dst_w + dstrect_x + j] = dst_background[(srcrect_y + i) * src_w + srcrect_x + j];
+      }
+    }
+    return;
   }
 }
 

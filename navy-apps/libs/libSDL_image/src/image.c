@@ -11,8 +11,25 @@ SDL_Surface* IMG_Load_RW(SDL_RWops *src, int freesrc) {
   return NULL;
 }
 
+/* Load an image from a filesystem path into a software surface.
+   Returns a new SDL surface, or NULL on error.
+ */
 SDL_Surface* IMG_Load(const char *filename) {
-  return NULL;
+  FILE *fp = fopen(filename, "r");
+  printf("filename is %s\n", filename);
+  if(!fp) {
+    perror("fopen");
+    return NULL;
+  }
+  fseek(fp, 0, SEEK_END);
+  long size = ftell(fp);
+  unsigned char *buf = (unsigned char *)malloc(size * sizeof(char));
+  fseek(fp, 0, SEEK_SET);/* reset position to the start of the file */
+  assert(fread(buf, 1, size, fp) != 0);
+  SDL_Surface *img_surface = STBIMG_LoadFromMemory(buf, size);
+  fclose(fp);
+  free(buf);
+  return img_surface;
 }
 
 int IMG_isPNG(SDL_RWops *src) {

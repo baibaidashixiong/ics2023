@@ -18,8 +18,13 @@ uint32_t SDL_GetTicks() {
    */
   struct timeval tv;
   gettimeofday(&tv, NULL);
+  /* 1 second = 1000 millisecond(ms) = 1000,000 microsecond */
   return tv.tv_sec * 1000 + tv.tv_usec / 1000;
 }
 
+/* Wait a specified number of milliseconds before returning. */
 void SDL_Delay(uint32_t ms) {
+  uint32_t start = SDL_GetTicks();
+  printf("start is %ud 0x%x\n", start,start);
+  while (SDL_GetTicks() - start <= ms){}
 }

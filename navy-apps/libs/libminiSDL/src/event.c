@@ -10,9 +10,25 @@ static const char *keyname[] = {
   _KEYS(keyname)
 };
 
+const char *eventname[] = {
+  "kd",
+  "ku",
+};
+
+/* key press event choose */
+enum SDL_EventType SDLEvent_TYPE_CHOOSE(const char* str) {
+  for(int i = 0; i < sizeof(eventname) / sizeof(char *); i++){
+    if(str && strcmp(str, eventname[i]) == 0){
+      return i;
+    }
+  }
+  return -1;
+}
+
+/* key_DOWN type choose */
 enum SDL_EventType SDLD_TYPE_CHOOSE(const char* str) {
-  for(int i = 0; i < sizeof(keyname); i++){
-    if(strcmp(str, keyname[i]) == 0){
+  for(int i = 0; i < sizeof(keyname) / sizeof(char *); i++){
+    if(str && strcmp(str, keyname[i]) == 0){
       return i;
     }
   }
@@ -22,19 +38,18 @@ enum SDL_EventType SDLD_TYPE_CHOOSE(const char* str) {
 /* event distribution for SDL Keyboard events */
 int SDLK_PollEvent(SDL_Event *ev, uint8_t SDL_EventType) {
   char buf[16];
-  ev->type = SDL_EventType;/* refresh the status of event.type */
-  int ret = NDL_PollEvent(buf, sizeof(buf));/* obtain key information */
+  /* obtain key information, return 1 if keyevent happend */
+  int ret = NDL_PollEvent(buf, sizeof(buf));
   char *key_type = strtok(buf, " ");
-  if(!ret || (strcmp(key_type, "kd") != 0)){
-    /* returns 1 on success or 0 if there was an error while waiting for events */
-    return 0;
+  ev->type = SDLEvent_TYPE_CHOOSE(key_type);
+  if(ret) {
+    // printf("evt type is %d, \n", ev->type);
+    /* be careful, there will be a `\n` written into buf, so it should be split here */
+    char *key_value = strtok(NULL, "\n");
+    ev->key.keysym.sym = SDLD_TYPE_CHOOSE(key_value);
+    return 1;
   }
-  /* be careful, there will be a `\n` written into buf, so it should be split here */
-  char *key_value = strtok(NULL, "\n");
-  ev->type = SDL_KEYDOWN;
-  // sprintf(key_value, "%s", key_value);
-  ev->key.keysym.sym = SDLD_TYPE_CHOOSE(key_value);
-  return 1;
+  return 0;
 }
 
 int SDL_PushEvent(SDL_Event *ev) {
