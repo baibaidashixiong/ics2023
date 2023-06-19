@@ -21,6 +21,7 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
    */
   // set MPP to 11 to stay in machine-mode, NEMU will not switch privilege level
   cpu.csr.mstatus |= ((1<<11)+(1<<12));
+  cpu.csr.mstatus &= ((((cpu.csr.mstatus >> 3) & 0x01) << 7) | ~(1 << 7));/* mpie = mie */
   cpu.csr.mcause = NO;
   /* store the code which indicating the event that caused the trap
    * Interrupt   Exception Code        Description

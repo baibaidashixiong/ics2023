@@ -33,8 +33,8 @@ uint32_t etrace_no = 0;
            etrace_no++, cpu.csr.mepc, cpu.csr.mstatus, cpu.csr.mcause, cpu.csr.mtvec);
 #endif
 
-#define ECALL(dnpc) do { bool success; \
-  dnpc = (isa_raise_intr(isa_reg_str2val("a7", &success), s->pc)); \
+#define ECALL(dnpc) do { \
+  dnpc = (isa_raise_intr(0x0b, s->pc)); \
   IFDEF(CONFIG_ETRACE, ETRACE_PRINT); \
   } while(0)
 /* a7 stored to mcause */
@@ -138,8 +138,8 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 110 ????? 11000 11", bltu   , B, s->dnpc = (src1 < src2) ? s->pc + imm : s->dnpc);
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw  , I, R(dest) = CSR(imm), CSR(imm) = src1);
   INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, R(dest) = CSR(imm), CSR(imm) |= src1);
-  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , I, ECALL(s->dnpc);IFDEF(CONFIG_DIFFTEST,difftest_skip_ref()););
-  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , J, MRET);
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall  , I, ECALL(s->dnpc); printf("ecall\n"); isa_reg_display(NULL););//IFDEF(CONFIG_DIFFTEST,difftest_skip_ref()););
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , J, MRET; printf("mret\n"); isa_reg_display(NULL););
   INSTPAT("0000000 00001 00000 000 00000 11100 11", ebreak , N, NEMUTRAP(s->pc, R(10))); // R(10) is $a0
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();
