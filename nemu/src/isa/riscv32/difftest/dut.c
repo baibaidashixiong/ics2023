@@ -17,6 +17,13 @@
 #include <cpu/difftest.h>
 #include "../local-include/reg.h"
 
+const char *p_regs[] = {
+  "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+  "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+  "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
+  "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
+};
+
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   /* 
    * difftest: check with right register and pc for every instruction
@@ -42,6 +49,15 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
     return false;
   }
   if(ref_r->csr.mcause != cpu.csr.mcause) {
+    for(int i=0;i<32;i++){
+      printf("%-3s: 0x%08x  |  ",p_regs[i],cpu.gpr[i]);
+    if( (i+1) % 8 == 0) printf("\n");
+    }
+    printf("pc : %x\n", cpu.pc);
+    printf("mstatus : 0x%08x\n",cpu.csr.mstatus);
+    printf("mtvec : 0x%08x\n",cpu.csr.mtvec);
+    printf("mcause : 0x%08x\n",cpu.csr.mcause);
+    printf("mepc : 0x%08x\n",cpu.csr.mepc);
     panic("mcause wrong!right mcause is 0x%x, wrong mcause is 0x%x\n",ref_r->csr.mcause, cpu.csr.mcause);
     return false;
   }

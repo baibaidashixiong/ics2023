@@ -61,7 +61,13 @@ static char* rl_gets() {
 }
 
 static int cmd_c(char *args) {
-  cpu_exec(-1);
+  char *arg = strtok(NULL, " ");
+  if (arg == NULL) cpu_exec(-1);
+  else if((arg[0]-48) > 0) {
+    for(int i = 0; i < atoi(arg); i++) {
+      cpu_exec(-1);
+    }
+  }
   return 0;
 }
 
@@ -117,6 +123,12 @@ static int cmd_w(char *args) {
   return 0;
 }
 
+static int cmd_b(char *args) {
+  char *arg = strtok(NULL, " ");
+  new_bp(arg);
+  return 0;
+}
+
 static int cmd_d(char *args) {
   int NO = 0 ;
   if(!args) {
@@ -146,13 +158,14 @@ static struct {
   int (*handler) (char *);
 } cmd_table [] = {
   { "help", "Display information about all supported commands", cmd_help },
-  { "c", "Continue the execution of the program", cmd_c },
+  { "c", "Continue the execution of the program, c N to execute N times in debug mode.", cmd_c },
   { "si", "Execute N instructions, default N is 1. usage: si N", cmd_si },
   { "info", "Print register status and monitor information. usage: info reg_name", cmd_info },
   { "x", "x N EXPR(addr). Find the value of the expression EXPR and use the result as the starting memory address, output N consecutive 4 bytes in hexadecimal format", cmd_x },
   { "p", "p the value of expr. usage: p <expr>($reg_name or *addr)", cmd_p },
   { "w", "pause program execution when the value of the expression EXPR changes.\n \
          usage: w $reg_name or w *addr", cmd_w },
+  { "b", "add a breakpoint. usage: b address ", cmd_b },
   { "d", "delete the number of the watchpoint", cmd_d },
   { "wd", "display watchpoint", cmd_wd },
   { "q", "Exit NEMU", cmd_q },

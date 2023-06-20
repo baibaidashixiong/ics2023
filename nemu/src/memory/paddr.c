@@ -101,7 +101,7 @@ static void pmem_write(paddr_t addr, int len, word_t data) {
   host_write(guest_to_host(addr), len, data);
 }
 
-static void out_of_bound(paddr_t addr) {
+void out_of_bound(paddr_t addr) {
 #ifdef CONFIG_MTRACE
   printf("\33[1;31mThe latest %d memory trace is:\33[0m", N_MT + 1);
   mt_infoput();

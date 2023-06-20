@@ -165,7 +165,7 @@ static int eval(int start, int end) {
       case '*': return val1 * val2;
       case '/': return val1 / val2;
       case TK_NEG : return 0 - val2;
-      case TK_DEREF : return paddr_read(val2, 1);
+      case TK_DEREF : return paddr_read(val2, 4);
       default: {
         printf("no match!");
         assert(0);}

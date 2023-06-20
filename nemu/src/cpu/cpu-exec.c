@@ -25,7 +25,7 @@
  * This is useful when you use the `si' command.
  * You can modify this value as you want.
  */
-#define MAX_INST_TO_PRINT 30
+#define MAX_INST_TO_PRINT 3000
 
 /*
  * datastruct for itrace
@@ -63,7 +63,8 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
 #ifdef CONFIG_WATCHPOINT
-  wp_check();
+  wp_check(dnpc, &nemu_state.state);
+  bp_check(dnpc, &nemu_state.state);
 #endif
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
 }

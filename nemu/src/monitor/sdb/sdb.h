@@ -31,11 +31,18 @@ typedef struct watchpoint {
   int value;
   struct watchpoint *next;
 } WP;
+
+typedef struct breakpoint {
+  int NO;
+  char break_address[16];
+  struct breakpoint *next;
+} BP;
 WP* new_wp(char *args);
 void free_wp(int NO);
 void wp_dis();
-void wp_check();
+void wp_check(vaddr_t pc, int *nemu_state);
 void printf_bin();
-
+void new_bp(char *args);
+void bp_check(vaddr_t pc, int *nemu_state);
 
 #endif

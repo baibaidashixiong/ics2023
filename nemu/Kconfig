@@ -142,7 +142,7 @@ config ITRACE
   default y
 
 config WATCHPOINT
-  bool "Enable nemu watchpoint"
+  bool "Enable nemu watchpoint and breakpoint"
   default y
 
 config MTRACE

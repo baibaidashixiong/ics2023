@@ -23,6 +23,8 @@ static WP wp_pool[NR_WP] = {};
 //static WP *free_head = NULL, *busy_head = NULL;
 static WP *free_head = NULL, *busy_head = NULL;
 
+static char break_address[16] = {0};
+
 void init_wp_pool() {
   int i;
   for (i = 0; i < NR_WP; i ++) {
@@ -93,7 +95,7 @@ void wp_dis(){
   }
 }
 
-void wp_check(){
+void wp_check(vaddr_t pc, int *nemu_state){
   char *args ;
   int value;
   bool *success = (bool*)true;
@@ -104,7 +106,22 @@ void wp_check(){
     value = expr(args, success);
     if(wp->value != value){
       printf("the value of %s changed from 0x%08x to 0x%08x\n", args, wp->value, value);
+      printf("pc is 0x%x now\n", pc);
+      *nemu_state = 1;
       wp->value = value;
     }    
+  }
+}
+
+void new_bp(char *args) {
+  strcpy(break_address, args);
+}
+
+void bp_check(vaddr_t pc, int *nemu_state) {
+  char pc_value[16] = {0};
+  snprintf(pc_value, 16, "%x", pc);
+  if(strcmp(pc_value, break_address) == 0) {
+    printf("stop at address 0x%x now.\n", pc);
+    *nemu_state = 1;
   }
 }
