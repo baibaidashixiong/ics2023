@@ -54,8 +54,8 @@ size_t fs_lseek(int fd, size_t offset, int whence);
 int fs_close(int fd);
 
 //gettimeofday
-#define __time_t uint64_t
-#define __suseconds_t uint64_t
+#define __time_t uint32_t /* Seconds since the Epoch. */
+#define __suseconds_t uint32_t /* Signed count of microseconds.  */
 struct timeval
 {
     __time_t tv_sec;		/* Seconds.  */
