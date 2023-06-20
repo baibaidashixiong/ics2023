@@ -28,7 +28,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
    *  it doesn't call the va_end macro, because it invokes the va_arg macro, 
    *  the value of ap is undefined after the call.
    */
-  char buffer[32];
+  char buffer[256];
   char *txt, cha;
   int num, len, len_p;
   uint32_t addr_p;
@@ -53,6 +53,10 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
           out[j++] = '0';
           break;
         }
+        if(num < 0) {
+          out[j++] = '-';
+          num = - num;
+        }
         for (len = 0; num ; num /= 10, ++len)
           buffer[len] = num % 10 + '0'; /* inverted sequence */
         for (int k = len - 1; k >= 0; --k)
@@ -63,7 +67,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
         len_format_flag = 0;
         addr_p = va_arg(ap, uint32_t);
         for (len_p = 0; addr_p ; addr_p /= 16, ++len_p)
-          buffer[len_p] = addr_p % 16 + '0'; /* inverted sequence */
+          buffer[len_p] = ((addr_p % 16 <10) ? ((addr_p % 16)+ '0') : (addr_p % 16 + 'W')); /* inverted sequence, man ascii for rule detail */
         for (int k = 0; k < BIT_WIDE_HEX - len_p; ++k)
           out[j++] = '0';/* add 0 if the length is not enough */
         for (int k = len_p - 1; k >= 0; --k)
