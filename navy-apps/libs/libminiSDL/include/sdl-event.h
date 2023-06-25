@@ -32,7 +32,7 @@ enum SDL_EventAction {
 };
 
 typedef struct {
-  uint8_t sym;
+  uint8_t sym;/* SDL virtual keysym */
 } SDL_keysym;
 
 typedef struct {

@@ -15,6 +15,8 @@ const char *eventname[] = {
   "ku",
 };
 
+static uint8_t keystate[sizeof(keyname) / sizeof(keyname[0])] = {0};
+
 /* key press event choose */
 enum SDL_EventType SDLEvent_TYPE_CHOOSE(const char* str) {
   for(int i = 0; i < sizeof(eventname) / sizeof(char *); i++){
@@ -42,14 +44,23 @@ int SDLK_PollEvent(SDL_Event *ev, uint8_t SDL_EventType) {
   int ret = NDL_PollEvent(buf, sizeof(buf));
   char *key_type = strtok(buf, " ");
   if(ret) {
-    ev->type = SDLEvent_TYPE_CHOOSE(key_type);
-    // printf("evt type is %d, \n", ev->type);
+    ev->key.type = SDLEvent_TYPE_CHOOSE(key_type);
+    // printf("evt type is %d, \n", ev->key.type);
     /* be careful, there will be a `\n` written into buf, so it should be split here */
     char *key_value = strtok(NULL, "\n");
     ev->key.keysym.sym = SDLD_TYPE_CHOOSE(key_value);
+    switch (ev->key.type)
+    {
+    case SDL_KEYDOWN:
+       keystate[ev->key.keysym.sym] = 1;
+       break;
+    case SDL_KEYUP:
+       keystate[ev->key.keysym.sym] = 0;
+       break;
+    }
     return 1;
   }
-  ev->type = SDL_USEREVENT;
+  ev->key.type = SDL_USEREVENT;
   return 0;
 }
 
@@ -73,6 +84,9 @@ int SDL_PeepEvents(SDL_Event *ev, int numevents, int action, uint32_t mask) {
 }
 
 uint8_t* SDL_GetKeyState(int *numkeys) {
-  assert(0);
-  return NULL;
+  if(numkeys) {
+    return keystate[*numkeys];
+  }
+  else
+    return keystate;
 }

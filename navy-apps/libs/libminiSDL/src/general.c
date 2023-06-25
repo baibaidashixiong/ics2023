@@ -18,9 +18,12 @@ int SDL_SetError(const char* fmt, ...) {
 }
 
 int SDL_ShowCursor(int toggle) {
+  assert(0);
   return 0;
 }
 
 void SDL_WM_SetCaption(const char *title, const char *icon) {
-  assert(0);
+  /* TODO: show title and icon on screen */
+  printf("%s\n", title);
+  // assert(0);
 }
