@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+static inline uint32_t translate_color(SDL_Color *color){
+  return (color->a << 24) | (color->r << 16) | (color->g << 8) | color->b;
+}
 /*
   perform a fast surface copy to a destination surface
     src:      the SDL_Surface structure to be copied from
@@ -16,39 +19,53 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
 
-  uint32_t *scr_background = (uint32_t *)src->pixels;
-  uint32_t *dst_background = (uint32_t *)dst->pixels;
-  int src_w = src->w;
-  int src_h = src->h;
-  int dst_w = dst->w;
-  int dst_h = dst->h;
-  /* the destination position (upper left corner) is (0, 0) if dstrect is NULL */
-  int dstrect_x = dstrect ? dstrect->x : 0;
-  int dstrect_y = dstrect ? dstrect->y : 0;
+  if (src->format->BitsPerPixel == 32){
+    uint32_t* src_pixels = (uint32_t*)src->pixels;
+    uint32_t* dst_pixels = (uint32_t*)dst->pixels;
 
-  if (srcrect == NULL) {
-    /* the entire surface is copied if srcrect is NULL */
-    assert(src_w <= (dst_w - dstrect_x));
-    assert(src_h <= (dst_h - dstrect_y));
-    for (int i = 0; i < src_h; ++i) {
-        for (int j = 0; j < src_w; ++j) {
-            dst_background[(dstrect_y + i) * dst_w + dstrect_x + j] = scr_background[i * src_w + j];
-        }
+    int rect_w, rect_h, src_x, src_y, dst_x, dst_y;
+    if (srcrect){
+      rect_w = srcrect->w; rect_h = srcrect->h;
+      src_x = srcrect->x; src_y = srcrect->y;
+    }else {
+      rect_w = src->w; rect_h = src->h;
+      src_x = 0; src_y = 0;
+    }
+    if (dstrect){
+      dst_x = dstrect->x, dst_y = dstrect->y;
+    }else {
+      dst_x = 0; dst_y = 0;
     }
 
-    return;
-  } else {
-    int srcrect_x = srcrect->x;
-    int srcrect_y = srcrect->y;
-    int width = srcrect->w < (dst_w - dstrect_x) ? srcrect->w : (dst_w - dstrect_x);
-    int height = srcrect->h < (dst_h - dstrect_y) ? srcrect->h : (dst_h - dstrect_y);
-
-    for (int i = 0; i < height; ++i) {
-      for (int j = 0; j < width; ++j) {
-        dst_background[(dstrect_y + i) * dst_w + dstrect_x + j] = dst_background[(srcrect_y + i) * src_w + srcrect_x + j];
+    for (int i = 0; i < rect_h; ++i){
+      for (int j = 0; j < rect_w; ++j){
+        dst_pixels[(dst_y + i) * dst->w + dst_x + j] = src_pixels[(src_y + i) * src->w + src_x + j];
       }
     }
-    return;
+  } else if (src->format->BitsPerPixel == 8) {
+    uint8_t* src_pixels = (uint8_t*)src->pixels;
+    uint8_t* dst_pixels = (uint8_t*)dst->pixels;
+
+    int rect_w, rect_h, src_x, src_y, dst_x, dst_y;
+    if (srcrect){
+      rect_w = srcrect->w; rect_h = srcrect->h;
+      src_x = srcrect->x; src_y = srcrect->y;
+    }else {
+      rect_w = src->w; rect_h = src->h;
+      src_x = 0; src_y = 0;
+    }
+    if (dstrect) {
+      dst_x = dstrect->x, dst_y = dstrect->y;
+    } else {
+      dst_x = 0; dst_y = 0;
+    }
+    for (int i = 0; i < rect_h; ++i) {
+      for (int j = 0; j < rect_w; ++j) {
+        dst_pixels[(dst_y + i) * dst->w + dst_x + j] = src_pixels[(src_y + i) * src->w + src_x + j];
+      }
+    }
+  } else {
+    assert(0);
   }
 }
 
@@ -59,32 +76,68 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
     color:    the color to fill with
  */
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
-  uint32_t *background = (uint32_t *)dst->pixels;
+  uint32_t *pixels = (uint32_t *)dst->pixels;
+  int dst_w = dst->w;
+  int rect_h, rect_w, rect_x, rect_y;
+
   if (dstrect == NULL) {
-    /* fill the whole background with color */
-    for (int i = 0; i < dst->w * dst->h; ++i) background[i] = color;
-      return;
+    rect_w = dst->w;
+    rect_h = dst->h;
+    rect_x = 0;
+    rect_y = 0;
+  } else {
+    rect_w = dstrect->w;
+    rect_h = dstrect->h;
+    rect_x = dstrect->x;
+    rect_y = dstrect->y;
   }
 
-  int rect_x = dstrect->x;
-  int rect_y = dstrect->y;
-  int rect_w = dstrect->w < (dst->w - dstrect->x) ? dstrect->w : (dst->w - dstrect->x);
-  int rect_h = dstrect->h < (dst->h - dstrect->y) ? dstrect->h : (dst->h - dstrect->y);
-
-  for (int i = 0; i < rect_h; ++i) {
-    for (int j = 0; j < rect_w; ++j) {
-      background[(rect_y + i) * dst->w + rect_x + j] = color;
+  for (int i = 0; i < rect_h; ++i){
+    for (int j = 0; j < rect_w; ++j){
+      pixels[(rect_y + i) * dst_w + rect_x + j] = color;
     }
   }
-  return;
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
-  if(x == 0 && y == 0 && w ==0 && h ==0){
-    NDL_DrawRect((uint32_t *)(s->pixels), x, y, s->w, s->h);
-    return;
+  if (s->format->BitsPerPixel == 32) {
+    if (w == 0 && h == 0 && x ==0 && y == 0) {
+      //printf("%d %d\n", s->w, s->h);
+      NDL_DrawRect((uint32_t *)s->pixels, 0, 0, s->w, s->h);
+      return ;
+    }
+
+    uint32_t *pixels = malloc(w * h * sizeof(uint32_t));
+    assert(pixels);
+    uint32_t *src = (uint32_t *)s->pixels;
+    for (int i = 0; i < h; ++i){
+      memcpy(&pixels[i * w], &src[(y + i) * s->w + x], sizeof(uint32_t) * w);
+    }
+    NDL_DrawRect(pixels, x, y, w, h);
+
+    free(pixels);
+  } else if(s->format->BitsPerPixel == 8) {
+    if (w == 0 && h == 0 && x ==0 && y == 0) {
+      w = s->w; h = s->h;
+      x = 0;    y = 0;
+    }
+
+    uint32_t *pixels = malloc(w * h * sizeof(uint32_t));
+    assert(pixels);
+    uint8_t *src = (uint8_t *)s->pixels;
+
+    for (int i = 0; i < h; ++i) {
+      for (int j = 0; j < w; ++j) {
+        pixels[i * w + j] = translate_color(&s->format->palette->colors[src[(y + i) * s->w + x + j]]);
+        //pixels[i * w + j] = s->format->palette->colors[src[(y + i) * s->w + x + j]].val;
+      }
+    }
+    NDL_DrawRect(pixels, x, y, w, h);
+
+    free(pixels);
+  }else {
+    assert(0);
   }
-  NDL_DrawRect((uint32_t *)(s->pixels), x, y, w, h);
 }
 
 // APIs below are already implemented.

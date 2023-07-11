@@ -5,7 +5,7 @@
 static PCB pcb[MAX_NR_PROC] __attribute__((used)) = {};
 static PCB pcb_boot = {};
 PCB *current = NULL;
-const char* file_name = "/bin/bird";
+const char* file_name = "/bin/pal";
 void naive_uload(PCB *pcb, const char *filename);
 
 void switch_boot_pcb() {
