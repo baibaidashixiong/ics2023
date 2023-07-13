@@ -1,4 +1,5 @@
 #include <common.h>
+#include <proc.h>
 // #include <unistd.h>
 #include "syscall.h"
 
@@ -22,8 +23,10 @@ void do_syscall(Context *c) {
      * if don't use ret = , it will only print the first word, e.g. `hello` only print `h`
      *    why?
      *      the whole syscall process:
-     *          navy:ecall -> am:__am_irq_handle -> nanos:do_event     -> nanos:do_syscall
-     *                     -> irq.c:do_event     -> am:__am_irq_handle -> navy
+     *          navy:ecall -> navy:syscall.c:syscall
+     *                     -> am:__am_irq_handle -> nanos:irq.c:do_event     -> nanos:syscall.c:do_syscall
+     *                     -> syscall function
+     *                     -> nanos:irq.c:do_event     -> am:__am_irq_handle -> navy
      *      when add ret= ,the return exit code isn't 0 in navy, then write from printf
      *        decomposition will continue; without `ret =`, return register a0 will be 0,
      *        printf will exit.
@@ -35,6 +38,7 @@ void do_syscall(Context *c) {
     case SYS_read: ret = fs_read(a[0], (void *)a[1], a[2]); break;
     case SYS_lseek: ret = fs_lseek(a[0], a[1], a[2]); break;
     case SYS_close: ret = fs_close(a[0]); break;
+    case SYS_execve:  Log("sys_execve(%s, %d, %d)", (const char *)a[0], a[1], a[2]);ret = sys_execve((const char *)a[0]);break;
     case SYS_gettimeofday: ret = sys_gettimeofday((struct timeval *)a[0], (struct timezone *)a[1]); break;
     default: panic("Unhandled syscall ID = %d", a[3]);
   }
@@ -46,6 +50,11 @@ void do_syscall(Context *c) {
 int sys_yield() {
   yield();
   return 0;
+}
+
+int sys_execve(const char *fname) {
+    naive_uload(NULL, fname);
+    return 0;
 }
 
 int sys_exit() {

@@ -50,5 +50,6 @@ char *syscall_names[] = {
 int sys_yield();
 int sys_exit();
 int sys_brk(void *addr);
+int sys_execve(const char *fname);
 
 #endif

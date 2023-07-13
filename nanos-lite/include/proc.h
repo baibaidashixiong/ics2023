@@ -15,6 +15,7 @@ typedef union {
     uintptr_t max_brk;
   };
 } PCB;
+void naive_uload(PCB *pcb, const char *filename);
 
 extern PCB *current;
 

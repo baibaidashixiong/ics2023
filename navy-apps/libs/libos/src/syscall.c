@@ -52,7 +52,8 @@ intptr_t _syscall_(intptr_t type, intptr_t a0, intptr_t a1, intptr_t a2) {
 }
 
 void _exit(int status) {
-  _syscall_(SYS_exit, status, 0, 0);
+  // _syscall_(SYS_exit, status, 0, 0);/* exit directly */
+  _syscall_(SYS_execve, "/bin/menu", 0, 0);/* change to menu */
   while (1);
 }
 
@@ -100,7 +101,8 @@ int _gettimeofday(struct timeval *tv, struct timezone *tz) {
 }
 
 int _execve(const char *fname, char * const argv[], char *const envp[]) {
-  _exit(SYS_execve);
+  return _syscall_(SYS_execve, (intptr_t)fname, 0, 0);
+  // _exit(SYS_execve);
   return 0;
 }
 
