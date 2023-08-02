@@ -1,9 +1,12 @@
 #include <common.h>
+#include <proc.h>
 
 static Context* do_event(Event e, Context* c) {
   /* event processing */
   switch (e.event) {
-    case EVENT_YIELD: printf("\33[0mirq event yield!\n");break;
+    case EVENT_YIELD:
+      // printf("\33[0mirq event yield!\n");
+      return schedule(c);
     case EVENT_SYSCALL:
       // Log("EVENT_SYSCALL");
     case EVENT_NULL:

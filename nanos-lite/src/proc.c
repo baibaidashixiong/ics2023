@@ -5,7 +5,7 @@
 static PCB pcb[MAX_NR_PROC] __attribute__((used)) = {};
 static PCB pcb_boot = {};
 PCB *current = NULL;
-const char* file_name = "/bin/menu";
+const char* file_name = "/bin/dummy";
 void naive_uload(PCB *pcb, const char *filename);
 
 void switch_boot_pcb() {
@@ -22,6 +22,8 @@ void hello_fun(void *arg) {
 }
 
 void init_proc() {
+  context_kload(&pcb[0], hello_fun, NULL);/* create hello_fun as kernel thread */
+  printf("new pcb pc is %p\n", &pcb[0]);
   switch_boot_pcb();
 
   Log("Initializing processes...");
@@ -32,5 +34,13 @@ void init_proc() {
 }
 
 Context* schedule(Context *prev) {
-  return NULL;
+  // save the context pointer
+  current->cp = prev;
+
+  // always select pcb[0] as the new process now
+  current = &pcb[0];
+  // printf("new process pc is %p\n", current->cp);
+
+  // then return the new context
+  return current->cp;
 }

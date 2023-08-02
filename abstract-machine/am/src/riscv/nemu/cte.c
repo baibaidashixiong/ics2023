@@ -19,9 +19,12 @@ Context* __am_irq_handle(Context *c) {
       case 9:/* sys_brk */
       case 13:/* sys_execve */
       case 19:/* sys_gettimeofday */
-      case 0x0b:
-          ev.event = EVENT_SYSCALL; break;
-      case -1: ev.event = EVENT_YIELD; break;
+      case 0x0b:/* nemu will always be machine mode call */
+        if(c->gpr[17] == -1) {
+          ev.event = EVENT_YIELD;
+          break;
+        }
+        ev.event = EVENT_SYSCALL; break;
       default:
         printf("c->mcase=%d\n", c->mcause);
         ev.event = EVENT_ERROR; break;
@@ -48,7 +51,31 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-  return NULL;
+  /* create kernel context
+      kstack: area of kernel stack
+      entry:  entry address of kernel thread
+      arg:    TODO()
+      context is a stack and the whole kcontext compose the stack and heap
+|               |
++---------------+ <---- kstack.end(high address)
+|               |
+|    context    |
+|               |
++---------------+ <--+
+|               |    |
+|               |    |
+|               |    |
+|               |    |
++---------------+    |
+|       cp      | ---+
++---------------+ <---- kstack.start(low address)
+|               |
+   */
+  uint32_t *kstack_end = kstack.end;
+  Context *base = (Context *)(kstack_end - 36);/* 36 = 32 + 3 + 1 */
+  base->mepc = (uintptr_t)entry;
+
+  return base;
 }
 
 void yield() {

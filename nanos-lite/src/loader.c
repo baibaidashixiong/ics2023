@@ -10,6 +10,7 @@
 #endif
 
 static uintptr_t loader(PCB *pcb, const char *filename) {
+  printf("file name is %s \n",filename);
   /*  
    *  +------------------------+
    *  |   ELF header           |
@@ -64,3 +65,14 @@ void naive_uload(PCB *pcb, const char *filename) {
   ((void(*)())entry) ();
 }
 
+
+void context_kload(PCB *pcb, void (*entry)(void *), void *arg) {
+  Area stack;
+  stack.start = &pcb->cp;
+
+  stack.end = &pcb->cp + STACK_SIZE;
+  printf("stack size is %d\n", STACK_SIZE);
+  printf("stack start is %p\n", stack.start);
+  printf("stack end is %p\n", stack.end);
+  pcb->cp = kcontext(stack, entry, arg);
+}

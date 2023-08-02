@@ -18,6 +18,7 @@ void do_syscall(Context *c) {
 
   switch (a[3]) {
     case SYS_exit: printf("++ exited with 0 ++\n"); ret = sys_exit(); break;
+    // case -1:
     case SYS_yield: ret = sys_yield(); break;
     /*
      * if don't use ret = , it will only print the first word, e.g. `hello` only print `h`
