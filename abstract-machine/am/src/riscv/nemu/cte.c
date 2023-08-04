@@ -10,15 +10,15 @@ Context* __am_irq_handle(Context *c) {
     /* Event distribution */
     switch (c->mcause) {
       case 0:  ev.event = EVENT_NULL; break;
-      case 1:/* sys_yield */
-      case 2:/* sys_open */
-      case 3:/* sys_read */
-      case 4:/* sys_write */
-      case 7:/* sys_close */
-      case 8:/* sys_lseek */
-      case 9:/* sys_brk */
-      case 13:/* sys_execve */
-      case 19:/* sys_gettimeofday */
+      // case 1:/* sys_yield */
+      // case 2:/* sys_open */
+      // case 3:/* sys_read */
+      // case 4:/* sys_write */
+      // case 7:/* sys_close */
+      // case 8:/* sys_lseek */
+      // case 9:/* sys_brk */
+      // case 13:/* sys_execve */
+      // case 19:/* sys_gettimeofday */
       case 0x0b:/* nemu will always be machine mode call */
         if(c->gpr[17] == -1) {
           ev.event = EVENT_YIELD;
@@ -73,12 +73,17 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
    */
   uint32_t *kstack_end = kstack.end;
   Context *base = (Context *)(kstack_end - 36);/* 36 = 32 + 3 + 1 */
+  base->gpr[10] = (uintptr_t)arg;
   base->mepc = (uintptr_t)entry;
 
   return base;
 }
 
 void yield() {
+  /* q:why will set -1 to a7?
+        a: return address is stored in a7,
+          -1 indicates there is no valid return address, then can call ecall to handle trap
+   */
   asm volatile("li a7, -1; ecall");
 }
 

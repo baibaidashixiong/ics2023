@@ -68,11 +68,12 @@ void naive_uload(PCB *pcb, const char *filename) {
 
 void context_kload(PCB *pcb, void (*entry)(void *), void *arg) {
   Area stack;
-  stack.start = &pcb->cp;
 
-  stack.end = &pcb->cp + STACK_SIZE;
-  printf("stack size is %d\n", STACK_SIZE);
-  printf("stack start is %p\n", stack.start);
-  printf("stack end is %p\n", stack.end);
+
+  stack.start = &pcb->cp;
+  stack.end = (void *)&pcb->cp + STACK_SIZE;
+  // stack.end = (void *)0x80070000 + STACK_SIZE;
+  // printf("stack start is %p\n", stack.start);
+  // printf("stack end is %p\n", stack.end);
   pcb->cp = kcontext(stack, entry, arg);
 }

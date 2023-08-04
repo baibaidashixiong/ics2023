@@ -31,7 +31,7 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
    */
   cpu.csr.mepc = epc;
 
-  return cpu.csr.mtvec;
+  return cpu.csr.mtvec;/* trap */
 }
 
 word_t isa_query_intr() {
