@@ -16,7 +16,7 @@ void do_syscall(Context *c) {
   a[3] = c->GPR1; // a7 store the return value
   intptr_t ret;/* syscall ret number */
 
-  strace(a[3]); /* strace switch */
+  // strace(a[3]); /* strace switch */
   switch (a[3]) {
     case SYS_exit: printf("++ exited with 0 ++\n"); ret = sys_exit(); break;
     // case -1:

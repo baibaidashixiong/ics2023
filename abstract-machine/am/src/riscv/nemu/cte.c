@@ -71,8 +71,9 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
 +---------------+ <---- kstack.start(low address)
 |               |
    */
-  uint32_t *kstack_end = kstack.end;
-  Context *base = (Context *)(kstack_end - 36);/* 36 = 32 + 3 + 1 */
+  // uint32_t *kstack_end = kstack.end;
+  // Context *base = (Context *)(kstack_end - 36);/* 36 = 32 + 3 + 1 */
+  Context *base = kstack.end - sizeof(Context);
   base->gpr[10] = (uintptr_t)arg;
   base->mepc = (uintptr_t)entry;
 

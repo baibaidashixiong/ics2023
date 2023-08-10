@@ -5,7 +5,7 @@
 static PCB pcb[MAX_NR_PROC] __attribute__((used)) = {};
 static PCB pcb_boot = {};
 PCB *current = NULL;
-const char* file_name = "/bin/dummy";
+const char* file_name = "/bin/pal";
 void naive_uload(PCB *pcb, const char *filename);
 
 void switch_boot_pcb() {
@@ -23,13 +23,14 @@ void hello_fun(void *arg) {
 
 void init_proc() {
   context_kload(&pcb[0], hello_fun, "zqz");/* create hello_fun as kernel thread */
-  context_kload(&pcb[1], hello_fun, "222");
+  // context_uload(&pcb[1], "/bin/pal");
+  context_uload(&pcb[0], "/bin/hello");
 
   switch_boot_pcb();/* set pcb stub */
 
   Log("Initializing processes...");
 
-  naive_uload(NULL, file_name);
+  // naive_uload(NULL, file_name);
   // load program here
 
 }

@@ -77,3 +77,49 @@ void context_kload(PCB *pcb, void (*entry)(void *), void *arg) {
   // printf("stack end is %p\n", stack.end);
   pcb->cp = kcontext(stack, entry, arg);
 }
+
+void context_uload(PCB *pcb, const char *filename) {
+   uintptr_t entry = loader(pcb, filename);
+/*
+|               |
++---------------+ <---- heap.end
+|               |
+|    context    |
+|               |
++---------------+ <--+
+|               |    |
+                     |
+                     |
+|               |    |
++---------------+    |
+|       cp      | ---+
++---------------+ <---- kstack.start
+|               |
+
+set the top of heap as user space stack
+|               |
++---------------+ <--- heap.end(high address) 0x88000000
+|               |
+|      heap     |
+|               |
++---------------+ <--+ head.start/stack_pointer 82b28000
+|               |    |
+|     stack     |    +--0x8000
+|               |    |
++---------------+ <--+ stack_top(low address)
+|               |
+.................
+|               |
++---------------+ <--- _pmem_start 0x80000000
+*/
+  Area user_stack;
+  uint8_t *heap_end = heap.end;
+  user_stack.end = heap_end;
+  user_stack.start = heap_end - STACK_SIZE;
+
+  Log("user_stack.start: %p, user_stack.end: %p", user_stack.start, user_stack.end);
+  Log("entry: %p", entry);
+
+  pcb->cp = ucontext(NULL, user_stack, (void(*)()) entry);
+  // pcb->cp->GPR0 = (uintptr_t) heap.end;/* set user process stack top to a0 */
+}
