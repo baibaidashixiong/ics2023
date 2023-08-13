@@ -1,3 +1,4 @@
+# set code in entry section, access and executable
 .section entry, "ax"
 .globl _start
 .type _start, @function

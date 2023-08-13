@@ -40,7 +40,12 @@ void do_syscall(Context *c) {
     case SYS_read: ret = fs_read(a[0], (void *)a[1], a[2]); break;
     case SYS_lseek: ret = fs_lseek(a[0], a[1], a[2]); break;
     case SYS_close: ret = fs_close(a[0]); break;
-    case SYS_execve:  Log("sys_execve(%s, %d, %d)", (const char *)a[0], a[1], a[2]);ret = sys_execve((const char *)a[0]);break;
+    case SYS_execve:  
+    #ifdef CONFIG_STRACE
+      Log("sys_execve(%s, %d, %d)", (const char *)a[0], a[1], a[2]);
+    #endif
+      ret = sys_execve((const char *)a[0], (char *const*)a[1], (char *const*)a[2]);
+      break;
     case SYS_gettimeofday: ret = sys_gettimeofday((struct timeval *)a[0], (struct timezone *)a[1]); break;
     default: panic("Unhandled syscall ID = %d", a[3]);
   }
@@ -54,9 +59,17 @@ int sys_yield() {
   return 0;
 }
 
-int sys_execve(const char *fname) {
-    naive_uload(NULL, fname);
-    return 0;
+// int sys_execve(const char *fname) {
+int sys_execve(const char *filename, char *const argv[], char *const envp[]) {
+/*
+char * const ptr: ptr是一个指向char类型的常量指针
+const char * ptr: ptr是一个指向const char类型的指针
+ */
+    // naive_uload(NULL, filename);
+    context_uload(current, filename, argv, envp);
+    // switch_boot_pcb();/* is this necessary? */
+    yield();
+    return -1;
 }
 
 int sys_exit() {

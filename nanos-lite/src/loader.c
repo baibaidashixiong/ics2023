@@ -78,7 +78,7 @@ void context_kload(PCB *pcb, void (*entry)(void *), void *arg) {
   pcb->cp = kcontext(stack, entry, arg);
 }
 
-void context_uload(PCB *pcb, const char *filename) {
+void context_uload(PCB *pcb, const char *filename, char *const argv[], char *const envp[]) {
    uintptr_t entry = loader(pcb, filename);
 /*
 |               |
@@ -116,10 +116,89 @@ set the top of heap as user space stack
   uint8_t *heap_end = heap.end;
   user_stack.end = heap_end;
   user_stack.start = heap_end - STACK_SIZE;
+  // printf("size of uint8 and uint32 , (context *) (char*) is %d, %d, %d, %d\n",sizeof(uint8_t), sizeof(uint32_t), sizeof(Context *), sizeof(char*));
 
   Log("user_stack.start: %p, user_stack.end: %p", user_stack.start, user_stack.end);
   Log("entry: %p", entry);
 
   pcb->cp = ucontext(NULL, user_stack, (void(*)()) entry);
-  // pcb->cp->GPR0 = (uintptr_t) heap.end;/* set user process stack top to a0 */
+  uint32_t *env_base = (uint32_t *)pcb->cp - 1;
+  printf("env_base is %p\n", env_base);
+  /* set argv and envp */
+  /*
+|               |
++---------------+ <---- ustack.end(env_base) high address
+|  Unspecified  |
++---------------+
+|               | <----------+
+|    string     | <--------+ |
+|     area      | <------+ | |
+|               | <----+ | | |
+|               | <--+ | | | |
++---------------+    | | | | |
+|  Unspecified  |    | | | | |
++---------------+    | | | | |
+|     NULL      |    | | | | |
++---------------+    | | | | |
+|    ......     |    | | | | |
++---------------+    | | | | |
+|    envp[1]    | ---+ | | | |
++---------------+      | | | |
+|    envp[0]    | -----+ | | |
++---------------+        | | |
+|     NULL      |        | | |
++---------------+        | | |
+| argv[argc-1]  | -------+ | |
++---------------+          | |
+|    ......     |          | |
++---------------+          | |
+|    argv[1]    | ---------+ |
++---------------+            |
+|    argv[0]    | -----------+
++---------------+
+|      argc     |
++---------------+ <---- cp->GPR0(a0)
+|               |
+|      stack    | <---- stack
+|               |
+*/
+  // int argc = 0;
+  int envc = 0, argc = 0;
+  while(argv && argv[argc]) {printf("Argument argv[%d] is %s\n", argc, argv[argc]); argc++;}
+  while(envp && envp[envc]) {printf("Argument envp[%d] is %s\n", envc, envp[envc]); envc++;}
+
+  // char *argv_str_area[argc];
+  char *argv_addr[argc], *envp_area[envc];
+  char *str_area = (char *)env_base;
+  for(int i = 0; i < argc; i++) {
+    str_area -= strlen(argv[i]) + 1;
+    argv_addr[i] = str_area;
+    strcpy(str_area, argv[i]);/* should set 0 in the end of str? */
+  }
+
+  for (int i = 0; i < envc; i++){
+    str_area -= strlen(envp[i]) + 1;
+    envp_area[i] = str_area;
+    strcpy(str_area, envp[i]);
+  }
+
+  uintptr_t *ptr = (uintptr_t *)str_area;
+  ptr -= 20;  // Unspecified
+  *ptr = (intptr_t)NULL; ptr--;
+  for(int i = envc - 1; i >= 0; i--){
+    *ptr = (intptr_t)envp_area[i];
+    ptr--;
+  }
+  *ptr = (intptr_t)NULL; ptr--;
+  for(int i = argc - 1; i >= 0; i--) {
+    *ptr = (intptr_t)argv_addr[i];
+    ptr--;
+  }
+  *ptr = argc;
+  printf("addr of ptr is %p\n",ptr);
+  pcb->cp->GPR0 = (uintptr_t)ptr;
+
+
+
+  // pcb->cp->GPR0 = (uintptr_t) user_stack.start;/* set user process stack top to a0 */
 }
