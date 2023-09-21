@@ -10,7 +10,7 @@
 #endif
 
 static uintptr_t loader(PCB *pcb, const char *filename) {
-  printf("file name is %s \n",filename);
+  // printf("file name is %s \n",filename);
   /*  
    *  +------------------------+
    *  |   ELF header           |
@@ -113,9 +113,11 @@ set the top of heap as user space stack
 +---------------+ <--- _pmem_start 0x80000000
 */
   Area user_stack;
-  uint8_t *heap_end = heap.end;
-  user_stack.end = heap_end;
-  user_stack.start = heap_end - STACK_SIZE;
+  // uint8_t *heap_end = heap.end;
+  // user_stack.end = heap.end;
+  // user_stack.start = heap.end - STACK_SIZE;
+  user_stack.start = new_page(8) ;
+  user_stack.end = user_stack.start + STACK_SIZE;
   // printf("size of uint8 and uint32 , (context *) (char*) is %d, %d, %d, %d\n",sizeof(uint8_t), sizeof(uint32_t), sizeof(Context *), sizeof(char*));
 
   Log("user_stack.start: %p, user_stack.end: %p", user_stack.start, user_stack.end);
@@ -123,7 +125,7 @@ set the top of heap as user space stack
 
   pcb->cp = ucontext(NULL, user_stack, (void(*)()) entry);
   uint32_t *env_base = (uint32_t *)pcb->cp - 1;
-  printf("env_base is %p\n", env_base);
+  // printf("env_base is %p\n", env_base);
   /* set argv and envp */
   /*
 |               |
@@ -164,7 +166,8 @@ set the top of heap as user space stack
 */
   // int argc = 0;
   int envc = 0, argc = 0;
-  while(argv && argv[argc]) {printf("Argument argv[%d] is %s\n", argc, argv[argc]); argc++;}
+  // while(argv && argv[argc]) {printf("Argument argv[%d] is %s\n", argc, argv[argc]); argc++;}
+  while(argv && argv[argc]) { argc++;}
   while(envp && envp[envc]) {printf("Argument envp[%d] is %s\n", envc, envp[envc]); envc++;}
 
   // char *argv_str_area[argc];
@@ -195,7 +198,7 @@ set the top of heap as user space stack
     ptr--;
   }
   *ptr = argc;
-  printf("addr of ptr is %p\n",ptr);
+  // printf("addr of ptr is %p\n",ptr);
   pcb->cp->GPR0 = (uintptr_t)ptr;
 
 

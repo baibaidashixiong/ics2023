@@ -8,7 +8,7 @@ PCB *current = NULL;
 const char* file_name = "/bin/pal";
 void naive_uload(PCB *pcb, const char *filename);
 
-char *argv[] = {"/bin/pal", "--skip", NULL};
+char *argv_pal[] = {"/bin/pal", "--skip", NULL};
 void switch_boot_pcb() {
   current = &pcb_boot;
 }
@@ -24,8 +24,12 @@ void hello_fun(void *arg) {
 
 void init_proc() {
   context_kload(&pcb[0], hello_fun, "zqz");/* create hello_fun as kernel thread */
-  context_uload(&pcb[1], "/bin/pal", argv, NULL);
-  // context_uload(&pcb[0], "/bin/hello");
+  char *argv1[] = {"/bin/nterm", NULL};
+  context_uload(&pcb[1], "/bin/nterm", argv1, NULL);
+  // char *argv_exec_test[] = {"/bin/exec-test", NULL};
+  // context_uload(&pcb[1], "/bin/hello", NULL, NULL);
+  // context_uload(&pcb[1], "/bin/exec-test", argv_exec_test, NULL);
+  // context_uload(&pcb[2], "/bin/pal", NULL, NULL);
 
   switch_boot_pcb();/* set pcb stub */
 

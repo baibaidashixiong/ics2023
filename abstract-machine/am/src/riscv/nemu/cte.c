@@ -54,7 +54,6 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   /* create kernel context
       kstack: area of kernel stack
       entry:  entry address of kernel thread
-      arg:    TODO()
       context is a stack and the whole kcontext compose the stack and heap
 |               |
 +---------------+ <---- kstack.end(high address)

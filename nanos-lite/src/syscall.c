@@ -41,9 +41,7 @@ void do_syscall(Context *c) {
     case SYS_lseek: ret = fs_lseek(a[0], a[1], a[2]); break;
     case SYS_close: ret = fs_close(a[0]); break;
     case SYS_execve:  
-    #ifdef CONFIG_STRACE
-      Log("sys_execve(%s, %d, %d)", (const char *)a[0], a[1], a[2]);
-    #endif
+      // Log("sys_execve(%s, %p, %p)", (const char *)a[0], a[1], a[2]);
       ret = sys_execve((const char *)a[0], (char *const*)a[1], (char *const*)a[2]);
       break;
     case SYS_gettimeofday: ret = sys_gettimeofday((struct timeval *)a[0], (struct timezone *)a[1]); break;
@@ -66,8 +64,15 @@ char * const ptr: ptr是一个指向char类型的常量指针
 const char * ptr: ptr是一个指向const char类型的指针
  */
     // naive_uload(NULL, filename);
+    printf("current pc is %p\n", current->cp);
     context_uload(current, filename, argv, envp);
-    // switch_boot_pcb();/* is this necessary? */
+    /*
+      why is switch_boot_pcb is necessary?
+        To terminate program execution flow.
+        To prevent stack stepping during function calls.
+        so current program execution flow will not be scheduled.
+     */
+    switch_boot_pcb();
     yield();
     return -1;
 }
